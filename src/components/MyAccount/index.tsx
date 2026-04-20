@@ -43,7 +43,7 @@ const MyAccount = () => {
   }, [isAuthenticated, router]);
 
   useEffect(() => {
-    if (activeTab === "addresses" && isAuthenticated) {
+    if (isAuthenticated) {
       dispatch(getAddressesByUser(user?.id)).catch(() => {
         // Silently handle — API may not exist yet
       });
@@ -336,9 +336,9 @@ const MyAccount = () => {
                     )}
 
                     <div className="space-y-4">
-                      {orders?.slice(0, 3).map((order: any) => (
+                      {orders?.slice(0, 3).map((order: any, index: number) => (
                         <div
-                          key={order.id}
+                          key={index}
                           className="flex justify-between border-b pb-2"
                         >
                           <div>

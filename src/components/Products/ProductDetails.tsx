@@ -5,9 +5,15 @@ import Image from "next/image";
 import Newsletter from "../Common/Newsletter";
 import RecentlyViewdItems from "@/components/ShopDetails/RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
-import { getLaptopById, getProductById } from "@/api/productApi";
+import { getProductById } from "@/api/productApi";
 import { Heart, ThumbsUp } from "lucide-react";
 import { getReviewsByProductId } from "@/api/reviewApi";
+import { RootState, useAppSelector } from "@/redux/store";
+import { reviewApi } from "@/api/reviewApi";
+import { toast } from "react-hot-toast";
+type Props = {
+  productId?: number;
+};
 
 const DetailItems = {
   laptop: [
@@ -38,21 +44,37 @@ const AdditionalInfo = {
   ],
 };
 
-const ProductDetail = () => {
+const ProductDetail = ({ productId = 1 }: Props) => {
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();
+  const user = useAppSelector((state: RootState) => state.auth.user);
 
   const [previewImg, setPreviewImg] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
   const [activeTab, setActiveTab] = useState("tabOne");
+  const [hover, setHover] = useState(0);
 
   const [liked, setLiked] = useState(false);
+  const [likedReviews, setLikedReviews] = useState([]);
 
   const [typeP, setTypeP] = useState<string>("");
 
   const [product1, setProduct] = useState<any>(null);
   const [reviews, setReviews] = useState<any>(null);
+  const [isHelpful, setIsHelpful] = useState<
+    Array<{ id: number; helpful: boolean }>
+  >([]);
+  const [anynomous, setAnonymous] = useState("anonymous");
+
+  const [review, setReview] = useState({
+    userId: user?.id || null,
+    productVariantId: productId || null,
+    comment: "",
+    username: user?.username || "",
+    avatar: user?.imageUrl || "",
+    rating: 1,
+  });
 
   const tabs = [
     {
@@ -75,11 +97,101 @@ const ProductDetail = () => {
     openPreviewModal();
   };
 
+  const getClassColor = (reviewId) => {
+    const helpful = isHelpful.some((item) => item.id === reviewId);
+    const toggleLiked = likedReviews.includes(reviewId);
+    return helpful || toggleLiked ? "text-[#FBB040]" : "text-gray-400";
+  };
+
+  const handleHelpful = async (reviewId, userId) => {
+    try {
+      var response = await reviewApi.toggleReviewHelpful(reviewId, userId);
+
+      setLikedReviews((prev) =>
+        response ? [...prev, reviewId] : prev.filter((id) => id !== reviewId),
+      );
+
+      setIsHelpful((prev) =>
+        response
+          ? [
+              ...prev.filter((n) => n.id !== reviewId),
+              { id: reviewId, helpful: true },
+            ]
+          : prev.filter((n) => n.id !== reviewId),
+      );
+
+      setReviews(
+        response
+          ? reviews.map((r) =>
+              r.id === reviewId
+                ? { ...r, helpfulCount: r.helpfulCount + 1 }
+                : r,
+            )
+          : reviews.map((r) =>
+              r.id === reviewId
+                ? { ...r, helpfulCount: r.helpfulCount - 1 }
+                : r,
+            ),
+      );
+    } catch (error) {
+      console.error("Error updating helpful count:", error);
+    }
+  };
+
+  const handleRating = (value) => {
+    setReview((prev) => ({
+      ...prev,
+      rating: value,
+    }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setReview((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await reviewApi.createReview(review);
+
+      toast.success("Review submitted successfully");
+      setReviews((prev) => [response, ...prev]);
+
+      setReview({
+        userId: null,
+        productVariantId: null,
+        comment: "",
+        username: "",
+        avatar: "",
+        rating: 0,
+      });
+    } catch (error) {
+      console.error(error);
+      toast.error("You have not purchased this product");
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getProductById(1);
+      const data = await getProductById(productId);
       setProduct(data);
       setTypeP(data?.productType?.toLowerCase());
+    };
+    fetchData();
+  }, [productId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await reviewApi.getLikebyUserIdAndProductId(
+        user?.id || 0,
+        productId,
+      );
+      setLikedReviews(data);
     };
     fetchData();
   }, []);
@@ -375,11 +487,11 @@ const ProductDetail = () => {
 
                   <h3 className="font-medium text-custom-1 mb-4.5">
                     <span className="text-sm sm:text-base text-dark">
-                      Price: ${product1?.price}
+                      Price: ${product1?.productVariant?.price}
                     </span>
                     <span className="line-through">
                       {" "}
-                      123 ${product1?.discountedPrice}{" "}
+                      123 ${product1?.productVariant?.discountedPrice}{" "}
                     </span>
                   </h3>
 
@@ -429,7 +541,7 @@ const ProductDetail = () => {
                     </li>
                   </ul>
 
-                  <form onSubmit={(e) => e.preventDefault()}>
+                  <form>
                     <div className="flex flex-col gap-4.5 border-y border-gray-3 mt-7.5 mb-9 py-9">
                       {/* <!-- details item --> */}
                       <div className="flex items-center gap-4">
@@ -700,7 +812,7 @@ const ProductDetail = () => {
                       {reviews?.length} Review for this product
                     </h2>
 
-                    <div className="flex flex-col gap-6">
+                    <div className="flex flex-col gap-6 max-h-[600px] overflow-y-auto pr-2 hide-scrollbar">
                       {reviews?.map((review, key) => (
                         <div
                           key={key}
@@ -710,7 +822,10 @@ const ProductDetail = () => {
                             <a href="#" className="flex items-center gap-4">
                               <div className="w-12.5 h-12.5 rounded-full overflow-hidden">
                                 <Image
-                                  src={review?.avatar || "/images/users/user-01.jpg"}
+                                  src={
+                                    review?.avatar ||
+                                    "/images/users/user-01.jpg"
+                                  }
                                   alt="author"
                                   className="w-12.5 h-12.5 rounded-full overflow-hidden"
                                   width={50}
@@ -758,8 +873,15 @@ const ProductDetail = () => {
                                 </span>
                               ))}
                             </div>
-                            <button className="flex gap-2 items-center text-sm text-gray-500 hover:text-blue-500 transition">
-                                <ThumbsUp size={16} /> {review?.helpfulCount || 0}
+                            <button
+                              onClick={() => handleHelpful(review.id, user.id)}
+                              className="flex gap-2 items-center text-sm text-gray-500 hover:text-blue-500 transition"
+                            >
+                              <ThumbsUp
+                                className={getClassColor(review.id)}
+                                size={16}
+                              />{" "}
+                              {review?.helpfulCount || 0}
                             </button>
                           </div>
 
@@ -770,7 +892,7 @@ const ProductDetail = () => {
                   </div>
 
                   <div className="max-w-[550px] w-full">
-                    <form>
+                    <form onSubmit={handleSubmitReview}>
                       <h2 className="font-medium text-2xl text-dark mb-3.5">
                         Add a Review
                       </h2>
@@ -782,87 +904,42 @@ const ProductDetail = () => {
 
                       <div className="flex items-center gap-3 mb-7.5">
                         <span>Your Rating*</span>
-
                         <div className="flex items-center gap-1">
-                          <span className="cursor-pointer text-[#FBB040]">
-                            <svg
-                              className="fill-current"
-                              width="15"
-                              height="16"
-                              viewBox="0 0 15 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
-                                fill=""
-                              />
-                            </svg>
-                          </span>
+                          {[1, 2, 3, 4, 5].map((star) => {
+                            const isActive = (hover || review?.rating) >= star;
 
-                          <span className="cursor-pointer text-[#FBB040]">
-                            <svg
-                              className="fill-current"
-                              width="15"
-                              height="16"
-                              viewBox="0 0 15 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
-                                fill=""
-                              />
-                            </svg>
-                          </span>
-
-                          <span className="cursor-pointer text-[#FBB040]">
-                            <svg
-                              className="fill-current"
-                              width="15"
-                              height="16"
-                              viewBox="0 0 15 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
-                                fill=""
-                              />
-                            </svg>
-                          </span>
-
-                          <span className="cursor-pointer text-gray-5">
-                            <svg
-                              className="fill-current"
-                              width="15"
-                              height="16"
-                              viewBox="0 0 15 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
-                                fill=""
-                              />
-                            </svg>
-                          </span>
-
-                          <span className="cursor-pointer text-gray-5">
-                            <svg
-                              className="fill-current"
-                              width="15"
-                              height="16"
-                              viewBox="0 0 15 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
-                                fill=""
-                              />
-                            </svg>
-                          </span>
+                            return (
+                              <span
+                                key={star}
+                                onClick={() => handleRating(star)}
+                                onMouseEnter={() => setHover(star)}
+                                onMouseLeave={() => setHover(0)}
+                                onChange={() =>
+                                  setReview((prev) => ({
+                                    ...prev,
+                                    rating: star,
+                                  }))
+                                }
+                                className={`cursor-pointer transition duration-200 ${
+                                  isActive ? "text-[#FBB040]" : "text-gray-5"
+                                } hover:scale-110`}
+                              >
+                                <svg
+                                  className="fill-current"
+                                  width="15"
+                                  height="16"
+                                  viewBox="0 0 15 16"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M14.6604 5.90785L9.97461 5.18335L7.85178 0.732874C7.69645 0.422375 7.28224 0.422375 7.12691 0.732874L5.00407 5.20923L0.344191 5.90785C0.0076444 5.9596 -0.121797 6.39947 0.137085 6.63235L3.52844 10.1255L2.72591 15.0158C2.67413 15.3522 3.01068 15.6368 3.32134 15.4298L7.54112 13.1269L11.735 15.4298C12.0198 15.5851 12.3822 15.3263 12.3046 15.0158L11.502 10.1255L14.8934 6.63235C15.1005 6.39947 14.9969 5.9596 14.6604 5.90785Z"
+                                    fill=""
+                                  />
+                                </svg>
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -873,10 +950,14 @@ const ProductDetail = () => {
                           </label>
 
                           <textarea
-                            name="comments"
-                            id="comments"
+                            name="comment"
+                            id="comment"
                             rows={5}
-                            placeholder="Your comments"
+                            value={review.comment}
+                            onChange={handleChange}
+                            required
+                            placeholder="Your comments here"
+                            maxLength={250}
                             className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full p-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                           ></textarea>
 
@@ -884,8 +965,14 @@ const ProductDetail = () => {
                             <span className="text-custom-sm text-dark-4">
                               Maximum
                             </span>
-                            <span className="text-custom-sm text-dark-4">
-                              0/250
+                            <span
+                              className={`text-sm ${
+                                review.comment.length >= 200
+                                  ? "text-red-light"
+                                  : "text-gray-5"
+                              }`}
+                            >
+                              {review?.comment.length}/250
                             </span>
                           </span>
                         </div>
@@ -898,23 +985,12 @@ const ProductDetail = () => {
 
                             <input
                               type="text"
-                              name="name"
+                              name="username"
                               id="name"
-                              placeholder="Your name"
-                              className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
-                            />
-                          </div>
-
-                          <div>
-                            <label htmlFor="email" className="block mb-2.5">
-                              Email
-                            </label>
-
-                            <input
-                              type="email"
-                              name="email"
-                              id="email"
-                              placeholder="Your email"
+                              value={review.username}
+                              onChange={handleChange}
+                              required
+                              placeholder="Enter your name"
                               className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                             />
                           </div>

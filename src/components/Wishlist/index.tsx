@@ -1,11 +1,23 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
-import { useAppSelector } from "@/redux/store";
+import { useAppSelector, useAppDispatch } from "@/redux/store";
 import SingleItem from "./SingleItem";
+import { fetchWishlistThunk, removeAllItemsFromWishlist } from "@/redux/slices/wishlist-slice";
 
 export const Wishlist = () => {
-  const wishlistItems = useAppSelector((state) => state.wishlistReducer.items);
+  const dispatch = useAppDispatch();
+  const { items: wishlistItems, status } = useAppSelector((state) => state.wishlistReducer);
+
+  useEffect(() => {
+    // Gọi API lấy danh sách wishlist khi component được mount
+    dispatch(fetchWishlistThunk());
+  }, [dispatch]);
+
+  const handleClearWishlist = () => {
+    // Chạy action đồng bộ trên client hoặc cần tạo thêm API xoá tổng hợp nếu có
+    dispatch(removeAllItemsFromWishlist());
+  };
 
   return (
     <>
@@ -14,8 +26,20 @@ export const Wishlist = () => {
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className="flex flex-wrap items-center justify-between gap-5 mb-7.5">
             <h2 className="font-medium text-dark text-2xl">Your Wishlist</h2>
-            <button className="text-blue">Clear Wishlist Cart</button>
+            <button onClick={handleClearWishlist} className="text-blue">Clear Wishlist Cart</button>
           </div>
+
+          {status === "loading" && (
+            <div className="text-center py-5">Loading your wishlist...</div>
+          )}
+          {status === "failed" && (
+            <div className="text-center py-5 text-red">Failed to load wishlist.</div>
+          )}
+          {status === "succeeded" && wishlistItems.length === 0 && (
+            <div className="text-center py-5">Your wishlist is empty.</div>
+          )}
+          
+          {wishlistItems.length > 0 && (
 
           <div className="bg-white rounded-[10px] shadow-1">
             <div className="w-full overflow-x-auto">
@@ -47,6 +71,7 @@ export const Wishlist = () => {
               </div>
             </div>
           </div>
+          )}
         </div>
       </section>
     </>

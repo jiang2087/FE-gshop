@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/slices/quickView-slice";
-import { addItemToCart } from "@/redux/slices/cart-slice";
+import { addToCartThunk } from "@/redux/slices/cart-slice";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
 import { updateproductDetails } from "@/redux/slices/product-details";
 import { useDispatch } from "react-redux";
@@ -23,12 +23,19 @@ const ProductItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
+    const cartId = parseInt("guest_123".split("_")[1]);
     dispatch(
-      addItemToCart({
-        ...item,
+      addToCartThunk({
+        cartKey: "guest_123",
+        productVariantId: item.id,
         quantity: 1,
-      })
-    );
+      }),
+    )
+      .unwrap()
+
+      .catch((error) => {
+        console.error("Error adding to cart:", error);
+      });
   };
 
   const handleItemToWishList = () => {
@@ -37,7 +44,7 @@ const ProductItem = ({ item }: { item: Product }) => {
         ...item,
         status: "available",
         quantity: 1,
-      })
+      }),
     );
   };
 
@@ -48,7 +55,13 @@ const ProductItem = ({ item }: { item: Product }) => {
   return (
     <div className="group">
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-[#F6F7FB] min-h-[270px] mb-4">
-        <Image src={item.imgs.previews[0]} alt="" width={250} height={250} className="w-full h-auto"/>
+        <Image
+          src={item.imgs.previews[0]}
+          alt=""
+          width={250}
+          height={250}
+          className="w-full h-auto"
+        />
 
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button

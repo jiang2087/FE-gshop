@@ -4,7 +4,7 @@ import React from "react";
 import { Product } from "@/types/product";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/slices/quickView-slice";
-import { addItemToCart } from "@/redux/slices/cart-slice";
+import { addToCartThunk} from "@/redux/slices/cart-slice";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
@@ -22,12 +22,12 @@ const SingleListItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        ...item,
-        quantity: 1,
-      })
-    );
+    const cartId = parseInt("guest_123".split("_")[1]);
+    dispatch(addToCartThunk({ cartKey: 'guest_123', productVariantId: item.id, quantity: 1 }))
+      .unwrap()
+      .catch((error) => {
+        console.error("Error adding to cart:", error);
+      });
   };
 
   const handleItemToWishList = () => {

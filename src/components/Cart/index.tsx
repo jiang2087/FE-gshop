@@ -1,14 +1,22 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Discount from "./Discount";
 import OrderSummary from "./OrderSummary";
-import { useAppSelector } from "@/redux/store";
+import { useAppSelector, useAppDispatch } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
+import { fetchCart, fetchCartTotal } from "@/redux/slices/cart-slice";
 
-const Cart = () => {
+const Cart = ({ cartKey }: { cartKey?: string }) => {
+  const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
+
+  useEffect(() => {
+    const cartId = 1;
+    dispatch(fetchCart(cartId));
+    dispatch(fetchCartTotal(cartId));
+  }, [dispatch]);
 
   return (
     <>

@@ -1,11 +1,10 @@
-import { selectTotalPrice } from "@/redux/slices/cart-slice";
+import { selectCartTotal } from "@/redux/slices/cart-slice";
 import { useAppSelector } from "@/redux/store";
-import React from "react";
-import { useSelector } from "react-redux";
+import { stat } from "node:fs";
 
 const OrderSummary = () => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useSelector(selectTotalPrice);
+  const totalPrice = useAppSelector(selectCartTotal);
 
   return (
     <div className="lg:max-w-[455px] w-full">
@@ -30,11 +29,11 @@ const OrderSummary = () => {
           {cartItems.map((item, key) => (
             <div key={key} className="flex items-center justify-between py-5 border-b border-gray-3">
               <div>
-                <p className="text-dark">{item.title}</p>
+                <p className="text-dark">{item.sku}</p>
               </div>
               <div>
                 <p className="text-dark text-right">
-                  ${item.discountedPrice * item.quantity}
+                  ${item.price * item.quantity}
                 </p>
               </div>
             </div>

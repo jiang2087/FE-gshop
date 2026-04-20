@@ -5,7 +5,7 @@ import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { updateQuickView } from "@/redux/slices/quickView-slice";
-import { addItemToCart } from "@/redux/slices/cart-slice";
+import { addToCartThunk} from "@/redux/slices/cart-slice";
 import Image from "next/image";
 import Link from "next/link";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
@@ -21,12 +21,12 @@ const SingleItem = ({ item }: { item: Product }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        ...item,
-        quantity: 1,
-      })
-    );
+    const cartId = parseInt("guest_123".split("_")[1]);
+    dispatch(addToCartThunk({ cartKey: 'guest_123', productVariantId: item.id, quantity: 1 }))
+      .unwrap()
+      .catch((error) => {
+        console.error("Error adding to cart:", error);
+      });
   };
 
   const handleItemToWishList = () => {

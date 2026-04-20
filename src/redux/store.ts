@@ -14,7 +14,7 @@ import { TypedUseSelectorHook, useSelector, useDispatch } from "react-redux";
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth'],
+  whitelist: ['auth', 'cartReducer'],
   blacklist: [],
 };
 
