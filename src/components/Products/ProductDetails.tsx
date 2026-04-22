@@ -92,7 +92,7 @@ const ProductDetail = () => {
 
 
   const handlePreviewSlider = () => {
-    openPreviewModal();
+    openPreviewModal(product1?.id || 1);
   };
 
   const getClassColor = (reviewId) => {

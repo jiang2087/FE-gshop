@@ -59,7 +59,7 @@ const Home = () => {
       <Categories />
       <NewArrival products={products} />
       <PromoBanner />
-      <BestSeller />
+      <BestSeller products={products}/>
       <CounDown />
       <Testimonials />
       <Newsletter />

@@ -1,5 +1,6 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
 import { useCallback, useRef } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
@@ -15,12 +16,15 @@ const PreviewSliderModal = () => {
 
   const sliderRef = useRef(null);
 
-  const handlePrev = useCallback(() => {
+  const handlePrev = useCallback((e) => {
+    e?.stopPropagation();
     if (!sliderRef.current) return;
     sliderRef.current.swiper.slidePrev();
   }, []);
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback((e) => {
+    
+    e?.stopPropagation();
     if (!sliderRef.current) return;
     sliderRef.current.swiper.slideNext();
   }, []);
@@ -94,27 +98,27 @@ const PreviewSliderModal = () => {
         </button>
       </div>
 
-      <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
-          </div>
-        </SwiperSlide>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/product-2-bg-1.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
-          </div>
-        </SwiperSlide>
+      <Swiper 
+        ref={sliderRef} 
+        slidesPerView={1} 
+        spaceBetween={20}
+        modules={[Navigation]}
+        className="w-full max-w-[600px]"
+      >
+        {data?.productVariants?.map((variant, key) => (
+          <SwiperSlide key={key} className="flex justify-center items-center min-h-[500px]">
+            <div className="relative w-full h-full flex justify-center items-center">
+              <Image
+                src={variant?.image || "/images/products/product-1-bg-1.png"}
+                alt={"product image"}
+                width={450}
+                height={450}
+                priority={key === 0}
+                className="object-contain"
+              />
+            </div>
+          </SwiperSlide>
+        ))}
       </Swiper>
     </div>
   );

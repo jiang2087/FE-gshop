@@ -25,14 +25,13 @@ const QuickViewModal = () => {
       if (selectedProductId) {
         const fetchedProduct = await getProductById(selectedProductId);
         const reviewStats = await getReviewStats([fetchedProduct.id]);
-        console.log("Fetched review stats:", reviewStats);
         const merged = {
           ...fetchedProduct,
           reviewCount: reviewStats?.[0]?.count ?? 0,
           avgRating: reviewStats?.[0]?.avg ?? 5,
         };
         if (isMounted) {
-          console.log("Fetched product:", merged);
+          console.log("Merged product details:", merged);
           setProduct(merged);
         }
       }
@@ -45,8 +44,12 @@ const QuickViewModal = () => {
 
   // preview modal
   const handlePreviewSlider = () => {
+    if (!product) {
+      console.warn("Product not loaded yet");
+      return;
+    }
     dispatch(updateproductDetails(product));
-    openPreviewModal(selectedProductId || 1);
+    openPreviewModal(selectedProductId || product.id);
   };
 
   // add to cart
@@ -67,7 +70,8 @@ const QuickViewModal = () => {
   useEffect(() => {
     // closing modal while clicking outside
     function handleClickOutside(event) {
-      if (!event.target.closest(".modal-content")) {
+      const isPreviewSlider = event.target.closest(".preview-slider");
+      if (!event.target.closest(".modal-content") && !isPreviewSlider) {
         closeModal();
       }
     }
