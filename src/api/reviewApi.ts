@@ -11,6 +11,21 @@ export const getReviewsByProductId = async (productId: number) => {
     }
 };
 
+// Fetch review stats for multiple products
+export const getReviewStats = async (productIds: number[]) => {
+    try {
+        const response = await api.get(`/review/stats`, {
+            params: {
+                productIds: productIds.join(',')
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching review stats:", error);
+        throw error;
+    }
+};
+
 export const getLikebyUserIdAndProductId = async (userId: number, productId: number) => {
     try {
         const response = await api.get(`/review?userId=${userId}&productId=${productId}`);
@@ -71,6 +86,7 @@ export const deleteReview = async (reviewId: number) => {
 
 export const reviewApi = {
     getReviewsByProductId,
+    getReviewStats,
     createReview,
     updateReview,
     deleteReview,

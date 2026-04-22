@@ -7,8 +7,9 @@ import "swiper/css/pagination";
 import "swiper/css";
 
 import Image from "next/image";
+import Link from 'next/link';
 
-const HeroCarousal = () => {
+const HeroCarousal = ({ products }: { products: any[] }) => {
   return (
     <Swiper
       spaceBetween={30}
@@ -38,24 +39,24 @@ const HeroCarousal = () => {
             </div>
 
             <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
+              <a href="#">{products.length > 0 ? products[0]?.name : "Product Title"}</a>
             </h1>
 
             <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at ipsum at risus euismod lobortis in
+            {products.length > 0 ? products[0]?.description : "Lorem ipsum dolor sit, consectetur elit nunc suscipit non ipsum nec suscipit."}
             </p>
 
-            <a
-              href="#"
+            <Link
+              href={"/products?id=1"}
               className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
             >
               Shop Now
-            </a>
+            </Link>
           </div>
 
           <div>
             <Image
-              src="/images/hero/hero-01.png"
+              src={products.length > 0 ? products[0]?.thumbnail : "/images/hero/hero-01.png"}
               alt="headphone"
               width={351}
               height={358}
@@ -79,25 +80,24 @@ const HeroCarousal = () => {
             </div>
 
             <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
+              <a href="#">{products.length > 1 ? products[1]?.name : "Product Title"}</a>
             </h1>
 
             <p>
-              Lorem ipsum dolor sit, consectetur elit nunc suscipit non ipsum
-              nec suscipit.
+              {products.length > 1 ? products[1]?.description : "Lorem ipsum dolor sit, consectetur elit nunc suscipit non ipsum nec suscipit."}
             </p>
 
-            <a
-              href="#"
+            <Link
+              href={"/products?id=2"}
               className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
             >
               Shop Now
-            </a>
+            </Link>
           </div>
 
           <div>
             <Image
-              src="/images/hero/hero-01.png"
+              src={products.length > 0 ? products[1]?.thumbnail : "/images/hero/hero-01.png"}
               alt="headphone"
               width={351}
               height={358}

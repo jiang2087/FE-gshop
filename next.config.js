@@ -9,7 +9,6 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   compress: true,
-  swcMinify: true,
   reactStrictMode: false,
   // Enable SWR caching for API responses
   headers: async () => {

@@ -1,5 +1,28 @@
 import api from "@/api/axiosInstace";
 
+export interface PaginationParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+// Fetch all products with pagination
+export const getAllProducts = async (params?: PaginationParams) => {
+  try {
+    const response = await api.get("/products", {
+      params: {
+        page: params?.page || 0,
+        size: params?.size || 10,
+        sort: params?.sort || "id,asc",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+};
+
 // fetch products by id
 export const getProductById = async (id: number) => {
   try {

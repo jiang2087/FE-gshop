@@ -11,9 +11,9 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 
-const ProductItem = ({ item }: { item: Product }) => {
+const ProductItem = ({ item }: { item: any }) => {
   const { openModal } = useModalContext();
-
+  const avgRating = Math.round(item?.avgRating || 5);
   const dispatch = useDispatch<AppDispatch>();
 
   // update the QuickView state
@@ -39,13 +39,7 @@ const ProductItem = ({ item }: { item: Product }) => {
   };
 
   const handleItemToWishList = () => {
-    dispatch(
-      addItemToWishlist({
-        ...item,
-        status: "available",
-        quantity: 1,
-      }),
-    );
+    dispatch(addItemToWishlist(item.id));
   };
 
   const handleProductDetails = () => {
@@ -56,7 +50,7 @@ const ProductItem = ({ item }: { item: Product }) => {
     <div className="group">
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-[#F6F7FB] min-h-[270px] mb-4">
         <Image
-          src={item.imgs.previews[0]}
+          src={item?.thumbnail || "/images/shop/shop-01.png"}
           alt=""
           width={250}
           height={250}
@@ -66,7 +60,7 @@ const ProductItem = ({ item }: { item: Product }) => {
         <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
           <button
             onClick={() => {
-              openModal();
+              openModal(item.id);
               handleQuickViewUpdate();
             }}
             id="newOne"
@@ -130,56 +124,51 @@ const ProductItem = ({ item }: { item: Product }) => {
 
       <div className="flex items-center gap-2.5 mb-2">
         <div className="flex items-center gap-1">
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-            className="w-full h-auto"
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-            className="w-full h-auto"
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-            className="w-full h-auto"
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-            className="w-full h-auto"
-          />
-          <Image
-            src="/images/icons/icon-star.svg"
-            alt="star icon"
-            width={14}
-            height={14}
-            className="w-full h-auto"
-          />
+          {[...Array(5)].map((_, index) => (
+            <svg
+            key={index}
+              className= { avgRating > index ? "fill-[#FFA645]" : "fill-[#E0E0E0]" }
+              width="14"
+            height="14"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <g clipPath="url(#clip0_375_9172)">
+                <path
+                  d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
+                  fill=""
+                />
+              </g>
+              <defs>
+                <clipPath id="clip0_375_9172">
+                  <rect width="18" height="18" fill="white" />
+                </clipPath>
+              </defs>
+            </svg>
+          ))}
         </div>
 
-        <p className="text-custom-sm">({item.reviews})</p>
+        <p className="text-custom-sm">({item?.reviewCount})</p>
       </div>
 
       <h3
         className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5"
         onClick={() => handleProductDetails()}
       >
-        <Link href="/shop-details"> {item.title} </Link>
+        <Link href={`/products?id=${item.id}`}>
+          {" "}
+          {item?.name || "Product Name"}{" "}
+        </Link>
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">
-        <span className="text-dark">${item.discountedPrice}</span>
-        <span className="text-dark-4 line-through">${item.price}</span>
+        <span className="text-dark">
+          ${item?.productVariants?.[0]?.price || "0"}
+        </span>
+        <span className="text-dark-4 line-through">
+          ${item?.productVariants?.[0]?.originalPrice || "0"}
+        </span>
       </span>
     </div>
   );

@@ -3,8 +3,9 @@ import React, { createContext, useContext, useState } from "react";
 
 interface PreviewSliderType {
   isModalPreviewOpen: boolean;
-  openPreviewModal: () => void;
+  openPreviewModal: (id: number) => void;
   closePreviewModal: () => void;
+  productId: number | null;
 }
 
 const PreviewSlider = createContext<PreviewSliderType | undefined>(undefined);
@@ -19,18 +20,21 @@ export const usePreviewSlider = () => {
 
 export const PreviewSliderProvider = ({ children }) => {
   const [isModalPreviewOpen, setIsModalOpen] = useState(false);
+  const [productId, setProductId] = useState<number | null>(null);
 
-  const openPreviewModal = () => {
+  const openPreviewModal = (id: number) => {
     setIsModalOpen(true);
+    setProductId(id);
   };
 
   const closePreviewModal = () => {
     setIsModalOpen(false);
+    setProductId(null);
   };
 
   return (
     <PreviewSlider.Provider
-      value={{ isModalPreviewOpen, openPreviewModal, closePreviewModal }}
+      value={{ isModalPreviewOpen, openPreviewModal, closePreviewModal, productId }}
     >
       {children}
     </PreviewSlider.Provider>

@@ -31,11 +31,7 @@ const SingleItem = ({ item }: { item: Product }) => {
 
   const handleItemToWishList = () => {
     dispatch(
-      addItemToWishlist({
-        ...item,
-        status: "available",
-        quantity: 1,
-      })
+      addItemToWishlist(item.id)
     );
   };
 
@@ -98,7 +94,7 @@ const SingleItem = ({ item }: { item: Product }) => {
           <button
             onClick={() => {
               handleQuickViewUpdate();
-              openModal();
+              openModal(item.id);
             }}
             aria-label="button for quick view"
             id="bestOne"

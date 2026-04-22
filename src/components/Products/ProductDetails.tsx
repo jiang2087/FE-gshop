@@ -11,9 +11,8 @@ import { getReviewsByProductId } from "@/api/reviewApi";
 import { RootState, useAppSelector } from "@/redux/store";
 import { reviewApi } from "@/api/reviewApi";
 import { toast } from "react-hot-toast";
-type Props = {
-  productId?: number;
-};
+import { useSearchParams } from "next/navigation";
+
 
 const DetailItems = {
   laptop: [
@@ -44,7 +43,7 @@ const AdditionalInfo = {
   ],
 };
 
-const ProductDetail = ({ productId = 1 }: Props) => {
+const ProductDetail = () => {
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -65,8 +64,8 @@ const ProductDetail = ({ productId = 1 }: Props) => {
   const [isHelpful, setIsHelpful] = useState<
     Array<{ id: number; helpful: boolean }>
   >([]);
-  const [anynomous, setAnonymous] = useState("anonymous");
-
+  const searchParams = useSearchParams();
+  const productId = parseInt(searchParams.get("id") ?? '1', 10)
   const [review, setReview] = useState({
     userId: user?.id || null,
     productVariantId: productId || null,
@@ -91,7 +90,6 @@ const ProductDetail = ({ productId = 1 }: Props) => {
     },
   ];
 
-  const alreadyExist = localStorage.getItem("productDetails");
 
   const handlePreviewSlider = () => {
     openPreviewModal();
