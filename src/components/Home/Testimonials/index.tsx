@@ -116,7 +116,7 @@ const Testimonials = ({ reviews }: { reviews: any}) => {
             >
               {testimonialsData?.map((item, key) => (
                 <SwiperSlide key={key}>
-                  <SingleItem testimonial={item} names={productNames?.[key]} />
+                  <SingleItem testimonial={item} nameProduct={productNames?.[key]} />
                 </SwiperSlide>
               ))}
             </Swiper>

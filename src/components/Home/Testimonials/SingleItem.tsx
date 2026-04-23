@@ -11,7 +11,7 @@ interface Testimonial {
   helpfulCount?: number;
 }
 
-const SingleItem = ({ testimonial, names }: { testimonial: Testimonial; names: string | null }) => {
+const SingleItem = ({ testimonial, nameProduct }: { testimonial: Testimonial; nameProduct: string | null }) => {
   const rating = Math.min(testimonial.rating || 5, 5);
 
   return (
