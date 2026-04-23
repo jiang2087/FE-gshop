@@ -10,7 +10,7 @@ import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/redux/store";
 
 const PreviewSliderModal = () => {
-  const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
+  const { closePreviewModal, isModalPreviewOpen, activeVariantIndex } = usePreviewSlider();
 
   const data = useAppSelector((state) => state.productDetailsReducer.value);
 
@@ -99,7 +99,8 @@ const PreviewSliderModal = () => {
       </div>
 
       <Swiper 
-        ref={sliderRef} 
+        ref={sliderRef}
+        initialSlide={activeVariantIndex}
         slidesPerView={1} 
         spaceBetween={20}
         modules={[Navigation]}

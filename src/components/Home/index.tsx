@@ -10,24 +10,29 @@ import Testimonials from "./Testimonials";
 import { useEffect, useState } from "react";
 import { getAllProducts } from "@/api/productApi";
 import Newsletter from "../Common/Newsletter";
-import { getReviewStats } from "@/api/reviewApi";
+import { getReviewStats, getTopReviews } from "@/api/reviewApi";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
+  const [topReviews, setTopReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   useEffect(() => {
     let isMounted = true;
 
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getAllProducts({ page: 0, size: 20 });
-        const reviewStats = await getReviewStats(data.content.map((p) => p.id));
+        const [productsData, reviewsData] = await Promise.all([
+          getAllProducts({ page: 0, size: 20 }),
+          getTopReviews(0, 6)
+        ]);
+        
+        const reviewStats = await getReviewStats(productsData.content.map((p) => p.id));
 
         const statsMap = new Map(reviewStats.map((s) => [s.productId, s]));
 
-        const mergedProducts = data.content.map((p) => {
+        const mergedProducts = productsData.content.map((p) => {
           const stat = statsMap.get(p.id) as any;
           return {
             ...p,
@@ -38,6 +43,7 @@ const Home = () => {
 
         if (isMounted) {
           setProducts(mergedProducts);
+          setTopReviews(reviewsData.content || reviewsData);
         }
       } catch (err) {
         if (isMounted) setError(err);
@@ -46,7 +52,7 @@ const Home = () => {
       }
     };
 
-    fetchProducts();
+    fetchData();
 
     return () => {
       isMounted = false;
@@ -61,7 +67,7 @@ const Home = () => {
       <PromoBanner />
       <BestSeller products={products}/>
       <CounDown />
-      <Testimonials />
+      <Testimonials reviews={topReviews} />
       <Newsletter />
     </main>
   );

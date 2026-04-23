@@ -49,7 +49,7 @@ const QuickViewModal = () => {
       return;
     }
     dispatch(updateproductDetails(product));
-    openPreviewModal(selectedProductId || product.id);
+    openPreviewModal(selectedProductId || product.id, activePreview);
   };
 
   // add to cart

@@ -1,15 +1,15 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useCallback, useRef } from "react";
-import testimonialsData from "./testimonialsData";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-
+import {getNamesByIds} from "@/api/productApi"
 // Import Swiper styles
 import "swiper/css/navigation";
 import "swiper/css";
 import SingleItem from "./SingleItem";
 
-const Testimonials = () => {
+const Testimonials = ({ reviews }: { reviews: any}) => {
+  
   const sliderRef = useRef(null);
 
   const handlePrev = useCallback(() => {
@@ -20,6 +20,18 @@ const Testimonials = () => {
   const handleNext = useCallback(() => {
     if (!sliderRef.current) return;
     sliderRef.current.swiper.slideNext();
+  }, []);
+
+  // Map review data to testimonial structure (no transformation needed as API returns correct structure)
+  const testimonialsData = reviews || [];
+  const [productNames, setProductNames] = useState(null);
+
+  useEffect(() => {
+    const fetchProductNames = async () => {
+      const namesMap = await getNamesByIds(reviews.map((r) => r.productId));
+      setProductNames(namesMap);
+    };
+    fetchProductNames();
   }, []);
 
   return (
@@ -102,9 +114,9 @@ const Testimonials = () => {
                 },
               }}
             >
-              {testimonialsData.map((item, key) => (
+              {testimonialsData?.map((item, key) => (
                 <SwiperSlide key={key}>
-                  <SingleItem testimonial={item} />
+                  <SingleItem testimonial={item} names={productNames?.[key]} />
                 </SwiperSlide>
               ))}
             </Swiper>

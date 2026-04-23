@@ -84,6 +84,26 @@ export const deleteReview = async (reviewId: number) => {
     }
 };
 
+export const getTopReviews = async (
+    page: number = 0,
+    size: number = 6,
+    sort: string = "createdAt,desc"
+) => {
+    try {
+        const response = await api.get(`/review/top`, {
+            params: {
+                page,
+                size,
+                sort
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching top reviews:", error);
+        throw error;
+    }
+};
+
 export const reviewApi = {
     getReviewsByProductId,
     getReviewStats,
@@ -91,5 +111,6 @@ export const reviewApi = {
     updateReview,
     deleteReview,
     toggleReviewHelpful,
-    getLikebyUserIdAndProductId
+    getLikebyUserIdAndProductId,
+    getTopReviews
 };

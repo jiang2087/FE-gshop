@@ -110,3 +110,18 @@ export const deleteWishlist = async (userId: number, productId: number) => {
     throw error;
   }
 };
+
+// Fetch product names by IDs
+export const getNamesByIds = async (ids: number[]) => {
+  try {
+    const response = await api.get(`/products/names`, {
+      params: {
+        ids: ids.join(',')
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching product names with ids ${ids.join(', ')}:`, error);
+    throw error;
+  }
+};
