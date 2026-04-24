@@ -2,14 +2,13 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import {getNamesByIds} from "@/api/productApi"
+import { getNamesByIds } from "@/api/productApi";
 // Import Swiper styles
 import "swiper/css/navigation";
 import "swiper/css";
 import SingleItem from "./SingleItem";
 
-const Testimonials = ({ reviews }: { reviews: any}) => {
-  
+const Testimonials = ({ reviews }: { reviews: any }) => {
   const sliderRef = useRef(null);
 
   const handlePrev = useCallback(() => {
@@ -24,15 +23,34 @@ const Testimonials = ({ reviews }: { reviews: any}) => {
 
   // Map review data to testimonial structure (no transformation needed as API returns correct structure)
   const testimonialsData = reviews || [];
-  const [productNames, setProductNames] = useState(null);
+  const [productNames, setProductNames] = useState<Map<number, string>>(new Map());
 
-  useEffect(() => {
-    const fetchProductNames = async () => {
-      const namesMap = await getNamesByIds(reviews.map((r) => r.productId));
-      setProductNames(namesMap);
-    };
-    fetchProductNames();
-  }, []);
+useEffect(() => {
+  if (!reviews?.length) return;
+
+  let isMounted = true;
+
+  const fetchProductNames = async () => {
+    const ids = [...new Set(reviews.map(r => r.productId))];
+
+    const names = await getNamesByIds(ids as number[]);
+
+    const map = new Map();
+    ids.forEach((id, index) => {
+      map.set(id, names[index]);
+    });
+
+    if (isMounted) {
+      setProductNames(map);
+    }
+  };
+
+  fetchProductNames();
+
+  return () => {
+    isMounted = false;
+  };
+}, [reviews]);
 
   return (
     <section className="overflow-hidden pb-16.5">
@@ -115,8 +133,11 @@ const Testimonials = ({ reviews }: { reviews: any}) => {
               }}
             >
               {testimonialsData?.map((item, key) => (
-                <SwiperSlide key={key}>
-                  <SingleItem testimonial={item} nameProduct={productNames?.[key]} />
+                <SwiperSlide key={item.id}>
+                  <SingleItem
+                    testimonial={item}
+                    nameProduct={productNames.get(item.productId) || null}
+                  />
                 </SwiperSlide>
               ))}
             </Swiper>

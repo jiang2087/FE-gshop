@@ -1,5 +1,6 @@
 "use client";
 import React, { use, useEffect, useState } from "react";
+import { useDispatch} from "react-redux";
 import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
 import Newsletter from "../Common/Newsletter";
@@ -8,21 +9,17 @@ import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { getProductById } from "@/api/productApi";
 import { Heart, ThumbsUp } from "lucide-react";
 import { getReviewsByProductId } from "@/api/reviewApi";
-import { RootState, useAppSelector } from "@/redux/store";
+import { AppDispatch, RootState, useAppSelector } from "@/redux/store";
 import { reviewApi } from "@/api/reviewApi";
 import { toast } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
-
+import { addToCartThunk } from "@/redux/slices/cart-slice";
 
 const DetailItems = {
   laptop: [
     { key: "storage", label: "Storage" },
     { key: "ram", label: "RAM" },
     { key: "cpu", label: "CPU" },
-  ],
-  mobile: [
-    { key: "fullName", label: "Name" },
-    { key: "birthYear", label: "Year of Birth" },
   ],
 };
 
@@ -38,15 +35,70 @@ const AdditionalInfo = {
     { key: "brand", label: "Brand" },
   ],
   mobile: [
-    { key: "fullName", label: "Name" },
-    { key: "birthYear", label: "Year of Birth" },
+    { key: "name", label: "Name" },
+    { key: "model", label: "Model" },
+    { key: "brand", label: "Brand" },
+    { key: "productType", label: "Product Type" },
+    { key: "ScreenSize", label: "Screen Size (inch)" },
+    { key: "resolution", label: "Resolution" },
+    { key: "camera", label: "Camera" },
+    { key: "battery", label: "Battery" },
+    { key: "dimension", label: "Dimensions" },
+  ],
+  watches: [
+    { key: "name", label: "Name" },
+    { key: "model", label: "Model" },
+    { key: "brand", label: "Brand" },
+    { key: "productType", label: "Product Type" },
+    { key: "gender", label: "Gender" },
+    { key: "material", label: "Material" },
+    { key: "batteryLife", label: "Battery Life (hours)" },
+    { key: "gps", label: "GPS" },
+  ],
+  televisions: [
+    { key: "name", label: "Name" },
+    { key: "brand", label: "Brand" },
+    { key: "productType", label: "Product Type" },
+    { key: "screenSize", label: "Screen Size (inch)" },
+    { key: "resolution", label: "Resolution" },
+    { key: "refreshRate", label: "Refresh Rate (Hz)" },
+    { key: "weight", label: "Weight (kg)" },
+    { key: "warrantyMonths", label: "Warranty (months)" },
   ],
 };
 
-const ProductDetail = () => {
+const formatValue = (item, value) => {
+  if (value === null || value === undefined) return "-";
+
+  // boolean
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  // custom theo field
+  switch (item.key) {
+    case "screenSize":
+      return `${value}"`;
+    case "refreshRate":
+      return `${value} Hz`;
+    case "weight":
+      return `${value} kg`;
+    case "warrantyMonths":
+      return `${value} months`;
+    case "batteryLife":
+      return `${value} hours`;
+    case "gps":
+      return value ? "Yes" : "No";
+    default:
+      return value;
+  }
+};
+
+const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();
   const user = useAppSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
 
   const [previewImg, setPreviewImg] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -65,7 +117,7 @@ const ProductDetail = () => {
     Array<{ id: number; helpful: boolean }>
   >([]);
   const searchParams = useSearchParams();
-  const productId = parseInt(searchParams.get("id") ?? '1', 10)
+  const productId = parseInt(searchParams.get("id") ?? "1", 10);
   const [review, setReview] = useState({
     userId: user?.id || null,
     productVariantId: productId || null,
@@ -75,6 +127,7 @@ const ProductDetail = () => {
     rating: 1,
   });
 
+  
   const tabs = [
     {
       id: "tabOne",
@@ -89,6 +142,24 @@ const ProductDetail = () => {
       title: "Reviews",
     },
   ];
+
+  // add to cart
+  const handleAddToCart = () => {
+    const defaultVariant = product1.productVariants?.[0];
+    if (!defaultVariant) {
+      console.error("No product variant available");
+      return;
+    }
+    dispatch(addToCartThunk({ 
+      cartKey: cartKey || "", 
+      productVariantId: defaultVariant.id, 
+      quantity: 1 
+    }))
+      .unwrap()
+      .catch((error) => {
+        console.error("Error adding to cart:", error);
+      });
+  };
 
 
   const handlePreviewSlider = () => {
@@ -407,7 +478,7 @@ const ProductDetail = () => {
                         </svg>
                       </div>
 
-                      <span> (5 customer reviews) </span>
+                      <span> ({reviews?.length || 0} customer reviews) </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -616,11 +687,14 @@ const ProductDetail = () => {
                     <div className="flex flex-wrap items-center gap-4.5">
                       <div className="flex items-center rounded-md border border-gray-3">
                         <button
+                          type="button"
                           aria-label="button for remove product"
                           className="flex items-center justify-center w-12 h-12 ease-out duration-200 hover:text-blue"
-                          onClick={() =>
-                            quantity > 1 && setQuantity(quantity - 1)
-                          }
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            quantity > 1 && setQuantity(quantity - 1);
+                          }}
                         >
                           <svg
                             className="fill-current"
@@ -642,7 +716,12 @@ const ProductDetail = () => {
                         </span>
 
                         <button
-                          onClick={() => setQuantity(quantity + 1)}
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setQuantity(quantity + 1);
+                          }}
                           aria-label="button for add product"
                           className="flex items-center justify-center w-12 h-12 ease-out duration-200 hover:text-blue"
                         >
@@ -666,12 +745,12 @@ const ProductDetail = () => {
                         </button>
                       </div>
 
-                      <a
-                        href="#"
-                        className="inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark"
+                      <button
+                        onClick={handleAddToCart}
+                        className="inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark cursor-pointer border-none"
                       >
-                        Purchase Now
-                      </a>
+                        Add to Cart
+                      </button>
 
                       <a
                         href="#"
@@ -789,7 +868,7 @@ const ProductDetail = () => {
                       </div>
                       <div className="w-full">
                         <p className="text-sm sm:text-base text-dark">
-                          {product1?.[item.key]}
+                          {formatValue(item, product1?.[item.key])}
                         </p>
                       </div>
                     </div>
