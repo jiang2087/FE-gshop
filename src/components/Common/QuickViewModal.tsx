@@ -353,6 +353,7 @@ const QuickViewModal = () => {
 
               <div className="flex flex-wrap items-center gap-4">
                 <button
+                  type="button"
                   disabled={quantity === 0 && true}
                   onClick={() =>
                     handleAddToCart(product?.productVariants[activePreview]?.id)

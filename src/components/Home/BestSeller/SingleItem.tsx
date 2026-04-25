@@ -116,6 +116,7 @@ const SingleItem = ({ item }: { item: any }) => {
           </button>
 
           <button
+            type="button"
             onClick={() => handleAddToCart()}
             aria-label="button for add to cart"
             id="addCartOne"
