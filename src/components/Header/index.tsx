@@ -42,16 +42,15 @@ const Header = () => {
     };
   }, []);
 
-  const options = [
+ const options = [
     { label: "All Categories", value: "0" },
-    { label: "Desktop", value: "1" },
-    { label: "Laptop", value: "2" },
-    { label: "Camera", value: "3" },
-    { label: "Phone", value: "4" },
-    { label: "Watch", value: "5" },
-    { label: "Mouse", value: "6" },
-    { label: "Tablet", value: "7" },
+    { label: "Laptop", value: "1", type: "LAPTOP" },
+    { label: "Phone", value: "2", type: "MOBILE" },
+    { label: "Watch", value: "3", type: "WATCHES" },
+    { label: "Television", value: "4", type: "TELEVISION" },
+    { label: "TABLET", value: "5", type: "TABLET" },
   ];
+
 
   return (
     <header

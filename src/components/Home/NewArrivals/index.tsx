@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import ProductItem from "@/components/Common/ProductItem";
 
-const NewArrival = ({ products }: { products: any[] }) => {
+const NewArrival = ({cartKey, products }: {cartKey: string, products: any[] }) => {
   const items = products.slice(2, 10);
   return (
     <section className="overflow-hidden pt-15">
@@ -49,7 +49,7 @@ const NewArrival = ({ products }: { products: any[] }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-7.5 gap-y-9">
           {/* <!-- New Arrivals item --> */}
           {items.map((item, key) => (
-            <ProductItem item={item} key={key} />
+            <ProductItem item={item} cartKey={cartKey} key={key} />
           ))}
         </div>
       </div>

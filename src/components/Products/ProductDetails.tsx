@@ -1,6 +1,6 @@
 "use client";
 import React, { use, useEffect, useState } from "react";
-import { useDispatch} from "react-redux";
+import { useDispatch } from "react-redux";
 import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
 import Newsletter from "../Common/Newsletter";
@@ -14,6 +14,8 @@ import { reviewApi } from "@/api/reviewApi";
 import { toast } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import { addToCartThunk } from "@/redux/slices/cart-slice";
+import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
+
 
 const DetailItems = {
   laptop: [
@@ -127,7 +129,6 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
     rating: 1,
   });
 
-  
   const tabs = [
     {
       id: "tabOne",
@@ -150,17 +151,24 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
       console.error("No product variant available");
       return;
     }
-    dispatch(addToCartThunk({ 
-      cartKey: cartKey || "", 
-      productVariantId: defaultVariant.id, 
-      quantity: 1 
-    }))
+    dispatch(
+      addToCartThunk({
+        cartKey: cartKey || "",
+        productVariantId: defaultVariant.id,
+        quantity: 1,
+      }),
+    )
       .unwrap()
       .catch((error) => {
         console.error("Error adding to cart:", error);
       });
   };
 
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+     dispatch(addItemToWishlist(product1.id));
+    setLiked(!liked);
+  };
 
   const handlePreviewSlider = () => {
     openPreviewModal(product1?.id || 1);
@@ -556,11 +564,11 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
                   <h3 className="font-medium text-custom-1 mb-4.5">
                     <span className="text-sm sm:text-base text-dark">
-                      Price: ${product1?.productVariant?.price}
+                      Price: ${product1?.productVariants[previewImg]?.price}{" "}
                     </span>
                     <span className="line-through">
                       {" "}
-                      123 ${product1?.productVariant?.discountedPrice}{" "}
+                      {product1?.productVariant?.discountedPrice || 0}${" "}
                     </span>
                   </h3>
 
@@ -755,10 +763,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
                       <a
                         href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setLiked(!liked);
-                        }}
+                        onClick={handleToggleWishlist}
                         className="flex items-center justify-center w-12 h-12 rounded-md border border-gray-3 ease-out duration-200 hover:text-white hover:bg-dark hover:border-transparent"
                       >
                         <Heart

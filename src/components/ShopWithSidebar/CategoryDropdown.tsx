@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getProductTypeCount } from "@/api/productApi";
 
-const CategoryItem = ({ category }) => {
-  const [selected, setSelected] = useState(false);
+const CategoryItem = ({ name, count, onToggle, selected }) => {
   return (
     <button
       className={`${
         selected && "text-blue"
       } group flex items-center justify-between ease-out duration-200 hover:text-blue `}
-      onClick={() => setSelected(!selected)}
+      onClick={() => onToggle(name)}
     >
       <div className="flex items-center gap-2">
         <div
@@ -35,7 +35,7 @@ const CategoryItem = ({ category }) => {
           </svg>
         </div>
 
-        <span>{category.name}</span>
+        <span>{name}</span>
       </div>
 
       <span
@@ -43,14 +43,54 @@ const CategoryItem = ({ category }) => {
           selected ? "text-white bg-blue" : "bg-gray-2"
         } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
       >
-        {category.products}
+        {count}
       </span>
     </button>
   );
 };
 
-const CategoryDropdown = ({ categories }) => {
+const CategoryDropdown = ({ categories, onSendData }) => {
   const [toggleDropdown, setToggleDropdown] = useState(true);
+  const [categoryCount, setCategoryCount] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [selectedTypes, setSelectedTypes] = useState([]);
+  const [error, setError] = useState(null);
+
+  const handleToggle = (value) => {
+    const val = value.toUpperCase();
+    setSelectedTypes((prev) =>
+      prev.includes(val) ? prev.filter((item) => item !== val) : [...prev, val],
+    );
+  };
+
+  useEffect(() => {
+    onSendData(selectedTypes);
+  }, [selectedTypes]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        const data = await getProductTypeCount(categories);
+        if (isMounted) {
+          setCategoryCount(data);
+        }
+      } catch (err) {
+        if (isMounted) setError(err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [categories]);
+
+  const names = Object.keys(categoryCount);
 
   return (
     <div className="bg-white shadow-1 rounded-lg">
@@ -88,7 +128,6 @@ const CategoryDropdown = ({ categories }) => {
         </button>
       </div>
 
-      {/* dropdown && 'shadow-filter */}
       {/* <!-- dropdown menu --> */}
       <div
         className={`flex-col gap-3 py-6 pl-6 pr-5.5 ${
@@ -96,7 +135,17 @@ const CategoryDropdown = ({ categories }) => {
         }`}
       >
         {categories.map((category, key) => (
-          <CategoryItem key={key} category={category} />
+          <CategoryItem
+            selected={
+              names[key]
+                ? selectedTypes.includes(names[key].toUpperCase())
+                : false
+            }
+            onToggle={handleToggle}
+            key={key}
+            name={names[key]}
+            count={categoryCount[names[key]] || 0}
+          />
         ))}
       </div>
     </div>

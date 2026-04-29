@@ -125,3 +125,61 @@ export const getNamesByIds = async (ids: number[]) => {
     throw error;
   }
 };
+
+export const getProductByType = async (types, params) => {
+  try {
+    const response = await api.get(`/products/type`, {
+      params: {
+        types: types, 
+        page: params?.page || 0,
+        size: params?.size || 9,
+        sort: params?.sort || "id,asc",
+      },
+    });
+
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching products by type:", error);
+    throw error;
+  }
+};
+
+
+export const getProductTypeCount = async (types) => {
+  try {
+    const response = await api.get(`/products/type/count`, {
+      params: {
+        types: types,
+      },
+    });
+
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching product type count:", error);
+    throw error;
+  }
+};
+
+
+export const getProductsByPriceRange = async (types, min, max, params) => {
+  try {
+    const response = await api.get(`/products/price-range`, {
+      params: {
+        min,
+        max,
+        page: params?.page || 0,
+        size: params?.size || 9,
+        sort: params?.sort || "id,asc",
+        ...(types && types.length > 0 && { types }),
+      },
+    });
+
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching products by price range:", error);
+    throw error;
+  }
+};

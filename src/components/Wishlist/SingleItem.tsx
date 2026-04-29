@@ -7,7 +7,7 @@ import { addToCartThunk } from "@/redux/slices/cart-slice";
 
 import Image from "next/image";
 
-const SingleItem = ({ item }: { item: any }) => {
+const SingleItem = ({ item, cartKey}: { item: any, cartKey: string}) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleRemoveFromWishlist = () => {
@@ -15,8 +15,7 @@ const SingleItem = ({ item }: { item: any }) => {
   };
 
   const handleAddToCart = () => {
-    const cartId = parseInt("guest_123".split("_")[1]);
-    dispatch(addToCartThunk({ cartKey: 'guest_123', productVariantId: item.productId, quantity: 1 }))
+    dispatch(addToCartThunk({ cartKey, productVariantId: item.productId, quantity: 1 }))
       .unwrap()
       .catch((error) => {
         console.error("Error adding to cart:", error);
@@ -57,7 +56,7 @@ const SingleItem = ({ item }: { item: any }) => {
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
             <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
-              <Image src={item?.thumbnail} alt="product" width={200} height={200} className="w-full h-auto" />
+              <Image src={item?.thumbnail || null} alt="product" width={200} height={200} className="w-full h-auto" />
             </div>
 
             <div>

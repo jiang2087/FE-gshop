@@ -58,7 +58,7 @@ export interface DiscountResponse {
 // Create a new voucher
 export const createVoucher = async (request: VoucherRequest) => {
   try {
-    const response = await api.post("/api/vouchers", request);
+    const response = await api.post("/vouchers", request);
     return response.data;
   } catch (error) {
     console.error("Error creating voucher:", error);
@@ -69,7 +69,7 @@ export const createVoucher = async (request: VoucherRequest) => {
 // Collect/claim a voucher
 export const collectVoucher = async (userId: number, code: string) => {
   try {
-    const response = await api.post("/api/vouchers/collect", null, {
+    const response = await api.post("/vouchers/collect", null, {
       params: {
         userId,
         code,
@@ -90,7 +90,7 @@ export const applyVoucher = async (
   shippingFee: number
 ) => {
   try {
-    const response = await api.post("/api/vouchers/apply", null, {
+    const response = await api.post("/vouchers/apply", null, {
       params: {
         userId,
         code,
@@ -110,7 +110,7 @@ export const applyVoucher = async (
 // Create a new discount
 export const createDiscount = async (request: DiscountRequest) => {
   try {
-    const response = await api.post("/api/discounts", request);
+    const response = await api.post("/discounts", request);
     return response.data;
   } catch (error) {
     console.error("Error creating discount:", error);
@@ -125,7 +125,7 @@ export const applyDiscountToProducts = async (
 ) => {
   try {
     const response = await api.post(
-      `/api/discounts/${discountId}/apply`,
+      `/discounts/${discountId}/apply`,
       productVariantIds
     );
     return response.data;
@@ -144,7 +144,7 @@ export const getDiscountedPrice = async (
   price: number
 ) => {
   try {
-    const response = await api.get("/api/discounts/price", {
+    const response = await api.get("/discounts/price", {
       params: {
         productVariantId,
         price,
@@ -156,6 +156,30 @@ export const getDiscountedPrice = async (
       `Error getting discounted price for variant ${productVariantId}:`,
       error
     );
+    throw error;
+  }
+};
+
+// ============== VOUCHER LIST ENDPOINTS ==============
+
+// Get all vouchers
+export const getAllVouchers = async (): Promise<VoucherResponse[]> => {
+  try {
+    const response = await api.get("/vouchers");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all vouchers:", error);
+    throw error;
+  }
+};
+
+// Get top 5 vouchers
+export const getTop5Vouchers = async (userId: number): Promise<VoucherResponse[]> => {
+  try {
+    const response = await api.get(`/vouchers/top-5/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching top 5 vouchers:", error);
     throw error;
   }
 };

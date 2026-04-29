@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import shopData from "@/components/Shop/shopData";
 
-const BestSeller = ({ products }: { products: any }) => {
+const BestSeller = ({cartKey, products }: {cartKey: string, products: any }) => {
   return (
     <section className="overflow-hidden">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">

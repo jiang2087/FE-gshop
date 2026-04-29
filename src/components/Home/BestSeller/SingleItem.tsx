@@ -9,7 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
 
-const SingleItem = ({ item }: { item: any }) => {
+const SingleItem = ({item, cartKey}: { item: any, cartKey: string }) => {
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -26,7 +26,7 @@ const SingleItem = ({ item }: { item: any }) => {
       return;
     }
     dispatch(addToCartThunk({ 
-      cartKey: 'guest_123', 
+      cartKey, 
       productVariantId: defaultVariant.id, 
       quantity: 1 
     }))

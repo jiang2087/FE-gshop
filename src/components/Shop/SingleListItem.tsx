@@ -1,29 +1,31 @@
 "use client";
 import React from "react";
-
-import { Product } from "@/types/product";
+import Image from "next/image";
 import { useModalContext } from "@/app/context/QuickViewModalContext";
 import { updateQuickView } from "@/redux/slices/quickView-slice";
-import { addToCartThunk} from "@/redux/slices/cart-slice";
+import { addToCartThunk } from "@/redux/slices/cart-slice";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
-import Image from "next/image";
 
-const SingleListItem = ({ item }: { item: Product }) => {
+const SingleListItem = ({ product, cartKey }: { product: any; cartKey: string }) => {
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
+  const avgRating = Math.round(product?.avgRating || 5);
 
-  // update the QuickView state
   const handleQuickViewUpdate = () => {
-    dispatch(updateQuickView({ ...item }));
+    dispatch(updateQuickView({ ...product }));
   };
 
-  // add to cart
   const handleAddToCart = () => {
-    const cartId = parseInt("guest_123".split("_")[1]);
-    dispatch(addToCartThunk({ cartKey: 'guest_123', productVariantId: item.id, quantity: 1 }))
+    dispatch(
+      addToCartThunk({
+        cartKey,
+        productVariantId: product.id,
+        quantity: 1,
+      })
+    )
       .unwrap()
       .catch((error) => {
         console.error("Error adding to cart:", error);
@@ -31,25 +33,52 @@ const SingleListItem = ({ item }: { item: Product }) => {
   };
 
   const handleItemToWishList = () => {
-    dispatch(
-      addItemToWishlist({
-        ...item,
-        status: "available",
-        quantity: 1,
-      })
-    );
+    dispatch(addItemToWishlist(product.id));
+  };
+
+  const getProductImage = () => {
+    if (product?.thumbnail) return product.thumbnail;
+    if (product?.imgs?.previews?.[0]) return product.imgs.previews[0];
+    if (product?.productVariants?.[0]?.image) return product.productVariants[0].image;
+    return "/images/shop/shop-01.png";
+  };
+
+  const getProductPrice = () => {
+    if (product?.productVariants?.[0]?.price) return product.productVariants[0].price;
+    if (product?.discountedPrice) return product.discountedPrice;
+    return "0";
+  };
+
+  const getProductOriginalPrice = () => {
+    if (product?.productVariants?.[0]?.originalPrice) return product.productVariants[0].originalPrice;
+    if (product?.price) return product.price;
+    return "0";
+  };
+
+  const getProductName = () => {
+    return product?.name || product?.title || "Product Name";
+  };
+
+  const getReviewCount = () => {
+    return product?.reviewCount || product?.reviews || 0;
   };
 
   return (
     <div className="group rounded-lg bg-white shadow-1">
       <div className="flex">
         <div className="shadow-list relative overflow-hidden flex items-center justify-center max-w-[270px] w-full sm:min-h-[270px] p-4">
-          <Image src={item.imgs.previews[0]} alt="" width={250} height={250} />
+          <Image
+            src={getProductImage()}
+            alt={getProductName()}
+            width={250}
+            height={250}
+            className="w-full h-auto"
+          />
 
           <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
             <button
               onClick={() => {
-                openModal();
+                openModal(product.id);
                 handleQuickViewUpdate();
               }}
               aria-label="button for quick view"
@@ -113,50 +142,43 @@ const SingleListItem = ({ item }: { item: Product }) => {
         <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
           <div>
             <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
-              <Link href="/shop-details"> {item.title} </Link>
+              <Link href={`/products?id=${product.id}`}>{getProductName()}</Link>
             </h3>
 
             <span className="flex items-center gap-2 font-medium text-lg">
-              <span className="text-dark">${item.discountedPrice}</span>
-              <span className="text-dark-4 line-through">${item.price}</span>
+              <span className="text-dark">${getProductPrice()}</span>
+              <span className="text-dark-4 line-through">${getProductOriginalPrice()}</span>
             </span>
           </div>
 
           <div className="flex items-center gap-2.5 mb-2">
             <div className="flex items-center gap-1">
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={15}
-                height={15}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={15}
-                height={15}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={15}
-                height={15}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={15}
-                height={15}
-              />
-              <Image
-                src="/images/icons/icon-star.svg"
-                alt="star icon"
-                width={15}
-                height={15}
-              />
+              {[...Array(5)].map((_, index) => (
+                <svg
+                  key={index}
+                  className={avgRating > index ? "fill-[#FFA645]" : "fill-[#E0E0E0]"}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <g clipPath="url(#clip0_375_9172)">
+                    <path
+                      d="M16.7906 6.72187L11.7 5.93438L9.39377 1.09688C9.22502 0.759375 8.77502 0.759375 8.60627 1.09688L6.30002 5.9625L1.23752 6.72187C0.871891 6.77812 0.731266 7.25625 1.01252 7.50938L4.69689 11.3063L3.82502 16.6219C3.76877 16.9875 4.13439 17.2969 4.47189 17.0719L9.05627 14.5687L13.6125 17.0719C13.9219 17.2406 14.3156 16.9594 14.2313 16.6219L13.3594 11.3063L17.0438 7.50938C17.2688 7.25625 17.1563 6.77812 16.7906 6.72187Z"
+                      fill=""
+                    />
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_375_9172">
+                      <rect width="18" height="18" fill="white" />
+                    </clipPath>
+                  </defs>
+                </svg>
+              ))}
             </div>
 
-            <p className="text-custom-sm">({item.reviews})</p>
+            <p className="text-custom-sm">({getReviewCount()})</p>
           </div>
         </div>
       </div>

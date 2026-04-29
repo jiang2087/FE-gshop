@@ -5,7 +5,7 @@ import { useAppSelector, useAppDispatch } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import { fetchWishlistThunk, removeAllItemsFromWishlist } from "@/redux/slices/wishlist-slice";
 
-export const Wishlist = () => {
+export const Wishlist = ({cartKey} : {cartKey: string}) => {
   const dispatch = useAppDispatch();
   const { items: wishlistItems, status } = useAppSelector((state) => state.wishlistReducer);
 
@@ -66,7 +66,7 @@ export const Wishlist = () => {
 
                 {/* <!-- wish item --> */}
                 {wishlistItems.map((item, key) => (
-                  <SingleItem item={item} key={key} />
+                  <SingleItem cartKey={cartKey} item={item} key={key} />
                 ))}
               </div>
             </div>

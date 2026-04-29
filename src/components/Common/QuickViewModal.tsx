@@ -11,7 +11,7 @@ import { updateproductDetails } from "@/redux/slices/product-details";
 import { getProductById } from "@/api/productApi";
 import { getReviewStats } from "@/api/reviewApi";
 
-const QuickViewModal = () => {
+const QuickViewModal = ({cartKey} : {cartKey: string}) => {
   const { isModalOpen, closeModal, selectedProductId } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
   const [quantity, setQuantity] = useState(1);
@@ -56,7 +56,7 @@ const QuickViewModal = () => {
   const handleAddToCart = (cartId: number) => {
     dispatch(
       addToCartThunk({
-        cartKey: "guest_123",
+        cartKey,
         productVariantId: product?.productVariants[activePreview]?.id,
         quantity,
       }),

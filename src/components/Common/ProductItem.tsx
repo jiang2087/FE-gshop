@@ -11,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 
-const ProductItem = ({ item }: { item: any }) => {
+const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
   const { openModal } = useModalContext();
   const avgRating = Math.round(item?.avgRating || 5);
   const dispatch = useDispatch<AppDispatch>();
@@ -23,10 +23,9 @@ const ProductItem = ({ item }: { item: any }) => {
 
   // add to cart
   const handleAddToCart = () => {
-    const cartId = parseInt("guest_123".split("_")[1]);
     dispatch(
       addToCartThunk({
-        cartKey: "guest_123",
+        cartKey: cartKey,
         productVariantId: item.id,
         quantity: 1,
       }),

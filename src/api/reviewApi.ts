@@ -29,7 +29,6 @@ export const getReviewStats = async (productIds: number[]) => {
 export const getLikebyUserIdAndProductId = async (userId: number, productId: number) => {
     try {
         const response = await api.get(`/review?userId=${userId}&productId=${productId}`);
-        console.log("Response from getLikebyUserIdAndProductId:", response.data);
         return response.data;
     } catch (error) {
         console.error(`Error fetching reviews for product with id ${productId} and user with id ${userId}:`, error);

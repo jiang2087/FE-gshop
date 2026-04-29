@@ -1,16 +1,19 @@
 import Home from "@/components/Home";
 import { Metadata } from "next";
-
+import { cookies } from "next/headers";
 export const metadata: Metadata = {
-  title: "NextCommerce | Nextjs E-commerce template",
+  title: "gshop-home",
   description: "This is Home for NextCommerce Template",
   // other metadata
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+    const cookieStore = await cookies(); 
+  const token = cookieStore.get("cartKey")?.value; 
   return (
     <>
-      <Home />
+      <Home cartKey = {token} />
     </>
   );
 }
+

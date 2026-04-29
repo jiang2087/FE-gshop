@@ -1,6 +1,5 @@
 "use client";
 import Hero from "./Hero";
-
 import Categories from "./Categories";
 import NewArrival from "./NewArrivals";
 import PromoBanner from "./PromoBanner";
@@ -11,14 +10,21 @@ import { useEffect, useState } from "react";
 import { getAllProducts } from "@/api/productApi";
 import Newsletter from "../Common/Newsletter";
 import { getReviewStats, getTopReviews } from "@/api/reviewApi";
+import TopVoucher from "./TopVoucher/index";
+import { getTop5Vouchers, VoucherResponse } from "@/api/discountApi";
+import { RootState, useAppSelector } from "@/redux/store";
 
-const Home = () => {
+
+const Home = ({cartKey} : {cartKey: string}) => {
   const [products, setProducts] = useState([]);
   const [topReviews, setTopReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+  const [vouchers, setVouchers] = useState<VoucherResponse[]>([]);
+  const {user} = useAppSelector((state: RootState) => state.auth);
+
   useEffect(() => {
+
     let isMounted = true;
 
     const fetchData = async () => {
@@ -58,14 +64,29 @@ const Home = () => {
       isMounted = false;
     };
   }, []);
+  
+  useEffect(() => {
+    const fetchVouchers = async () => {
+      try {
+        const data = await getTop5Vouchers(user?.id);
+        setVouchers(data);
+      } catch (error) {
+        console.error("Error fetching vouchers:", error);
+      }
+    };
+    fetchVouchers();
+  }, []);
+
 
   return (
     <main>
+      
       <Hero products={products} />
+      {vouchers.length > 0 && <TopVoucher vouchers={vouchers}/>}
       <Categories />
-      <NewArrival products={products} />
+      <NewArrival cartKey={cartKey} products={products} />
       <PromoBanner />
-      <BestSeller products={products}/>
+      <BestSeller cartKey={cartKey} products={products}/>
       <CounDown />
       <Testimonials reviews={topReviews} />
       <Newsletter />
@@ -74,3 +95,4 @@ const Home = () => {
 };
 
 export default Home;
+
