@@ -26,7 +26,7 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
     dispatch(
       addToCartThunk({
         cartKey: cartKey,
-        productVariantId: item.id,
+        productVariantId: item.productVariants?.[0]?.id,
         quantity: 1,
       }),
     )
@@ -38,7 +38,7 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
   };
 
   const handleItemToWishList = () => {
-    dispatch(addItemToWishlist(item.id));
+    dispatch(addItemToWishlist(item.productVariants?.[0]?.id));
   };
 
   const handleProductDetails = () => {

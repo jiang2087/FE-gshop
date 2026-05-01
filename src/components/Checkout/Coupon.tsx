@@ -1,6 +1,14 @@
-import React from "react";
+﻿import React, { useState } from "react";
 
-const Coupon = () => {
+const Coupon = ({ onApplyCoupon }: { onApplyCoupon: (code: string) => void }) => {
+  const [couponCode, setCouponCode] = useState("");
+
+  const handleApply = () => {
+    if (onApplyCoupon && couponCode.trim()) {
+      onApplyCoupon(couponCode.trim());
+    }
+  };
+
   return (
     <div className="bg-white shadow-1 rounded-[10px] mt-7.5">
       <div className="border-b border-gray-3 py-5 px-4 sm:px-8.5">
@@ -14,11 +22,14 @@ const Coupon = () => {
             name="coupon"
             id="coupon"
             placeholder="Enter coupon code"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value)}
             className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
           />
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleApply}
             className="inline-flex font-medium text-white bg-blue py-3 px-6 rounded-md ease-out duration-200 hover:bg-blue-dark"
           >
             Apply

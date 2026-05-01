@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 
 const CustomSelect = ({ options }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -42,8 +43,16 @@ const CustomSelect = ({ options }) => {
       </div>
       <div className={`select-items ${isOpen ? "" : "select-hide"}`}>
         {options.slice(1, -1).map((option, index) => (
-          <div
+         <Link
             key={index}
+            href={{
+              pathname: "/shop-with-sidebar",
+              query: {
+                type: option.type,
+              },
+            }}
+          >
+           <div
             onClick={() => handleOptionClick(option)}
             className={`select-item ${
               selectedOption === option ? "same-as-selected" : ""
@@ -51,6 +60,7 @@ const CustomSelect = ({ options }) => {
           >
             {option.label}
           </div>
+         </Link>
         ))}
       </div>
     </div>

@@ -38,7 +38,7 @@ const SingleItem = ({item, cartKey}: { item: any, cartKey: string }) => {
 
   const handleItemToWishList = () => {
     dispatch(
-      addItemToWishlist(item.id)
+      addItemToWishlist(item.productVariants?.[0]?.id)
     );
   };
 

@@ -1,9 +1,22 @@
-import React from "react";
+﻿"use client";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
 
-const Discount = () => {
+interface DiscountProps {
+  onChange: (code: string) => void;
+}
+
+const Discount = ({ onChange }: DiscountProps) => {
+  const [code, setCode] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onChange(code);
+  };
+
   return (
     <div className="lg:max-w-[670px] w-full">
-      <form>
+      <form onSubmit={handleSubmit}>
         {/* <!-- coupon box --> */}
         <div className="bg-white shadow-1 rounded-[10px]">
           <div className="border-b border-gray-3 py-5 px-4 sm:px-5.5">
@@ -17,6 +30,8 @@ const Discount = () => {
                   type="text"
                   name="coupon"
                   id="coupon"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
                   placeholder="Enter coupon code"
                   className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                 />

@@ -19,13 +19,9 @@ type Voucher = {
   value: number;
 };
 
-const formatCompactVnd = (amount = 0) => {
-  if (amount >= 1000000)
-    return `${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 1)}M`;
-  if (amount >= 1000) return `${Math.round(amount / 1000)}K`;
-  return `${Math.round(amount)}`;
+const formatUSD = (amount = 0) => {
+  return `$${Number(amount).toFixed(0)}`;
 };
-
 const formatDate = (date: string) =>
   new Date(date).toLocaleDateString("vi-VN", {
     day: "2-digit",
@@ -58,7 +54,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
   // Mapping: `value + discountType` -> text "Giảm 50K" / "Giảm 20%"
   const discountLabel =
     voucher.discountType === "FIXED_AMOUNT"
-      ? (`Giảm ${formatCompactVnd(voucher.value)}`)
+      ? (`Giảm ${formatUSD(voucher.value)}`)
       
       : `Giảm ${Math.round(voucher.value)}%`;
 
@@ -194,7 +190,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
         <p>
           Đơn tối thiểu:{" "}
           <span className="font-semibold text-gray-800">
-            {formatCompactVnd(voucher.minOrderValue || 0)}
+            {formatUSD(voucher.minOrderValue || 0)}
           </span>
         </p>
 

@@ -1,5 +1,5 @@
-"use client";
-import React from "react";
+﻿"use client";
+import React, { useState, useEffect } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import Login from "./Login";
 import Shipping from "./Shipping";
@@ -7,25 +7,75 @@ import ShippingMethod from "./ShippingMethod";
 import PaymentMethod from "./PaymentMethod";
 import Coupon from "./Coupon";
 import Billing from "./Billing";
+import { selectCartTotal } from "@/redux/slices/cart-slice";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { getAddressesByUser } from "@/redux/slices/addressSlice";
+import { getPreviewVoucher } from "@/api/discountApi";
 
 const Checkout = () => {
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { addresses } = useAppSelector((state) => state.address);
+  const cartItems = useAppSelector((state) => state.cartReducer.items);
+  const totalPrice = useAppSelector(selectCartTotal);
+
+  const dispatch = useAppDispatch();
+
+  const [billing, setBilling] = useState({
+    recipientName: "",
+    phone: "",
+    address: "",
+  });
+
+  const [shipping, setShipping] = useState({
+    recipientName: "",
+    phone: "",
+    address: "",
+  });
+
+  const [coupon, setCoupon] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  const handleApplyCoupon = (code: string) => {
+    setCoupon(code);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(getAddressesByUser(user.id));
+    }
+  }, [user?.id]);
+
   return (
     <>
       <Breadcrumb title={"Checkout"} pages={["checkout"]} />
       <section className="overflow-hidden py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-          <form>
+          <article className="max-w-[1170px] w-full mx-auto">
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11">
               {/* <!-- checkout left --> */}
               <div className="lg:max-w-[670px] w-full">
                 {/* <!-- login box --> */}
-                <Login />
+                {!isAuthenticated && <Login />}
 
                 {/* <!-- billing details --> */}
-                <Billing />
+                <Billing
+                  addresses={
+                    addresses.find((address) => address.isDefault) ||
+                    addresses[0]
+                  }
+                  billing={billing}
+                  onChange={(field, value) =>
+                    setBilling((prev) => ({ ...prev, [field]: value }))
+                  }
+                />
 
-                {/* <!-- address box two --> */}
-                <Shipping />
+                {/* <!-- shipping to different address --> */}
+                <Shipping
+                  shipping={shipping}
+                  onChange={(field, value) =>
+                    setShipping((prev) => ({ ...prev, [field]: value }))
+                  }
+                />
 
                 {/* <!-- others note box --> */}
                 <div className="bg-white shadow-1 rounded-[10px] p-4 sm:p-8.5 mt-7.5">
@@ -68,45 +118,44 @@ const Checkout = () => {
                       </div>
                     </div>
 
-                    {/* <!-- product item --> */}
+                    {cartItems.map((cart, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between py-5 border-b border-gray-3"
+                        >
+                          <div>
+                            <p className="text-dark">{cart?.sku}</p>
+                          </div>
+                          <div>
+                            <p className="text-dark text-right">
+                              ${cart.price.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+
                     <div className="flex items-center justify-between py-5 border-b border-gray-3">
                       <div>
-                        <p className="text-dark">iPhone 14 Plus , 6/128GB</p>
+                        <p className="text-dark">SHIPPING FEE</p>
                       </div>
                       <div>
-                        <p className="text-dark text-right">$899.00</p>
+                        <p className="text-dark text-right">$1.2</p>
                       </div>
                     </div>
 
-                    {/* <!-- product item --> */}
-                    <div className="flex items-center justify-between py-5 border-b border-gray-3">
-                      <div>
-                        <p className="text-dark">Asus RT Dual Band Router</p>
+                    {/* <!-- discount --> */}
+                    {discountAmount > 0 && (
+                      <div className="flex items-center justify-between py-5 border-b border-gray-3">
+                        <div>
+                          <p className="text-dark">DISCOUNT</p>
+                        </div>
+                        <div>
+                          <p className="text-green-500 text-right">-${discountAmount.toFixed(2)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-dark text-right">$129.00</p>
-                      </div>
-                    </div>
-
-                    {/* <!-- product item --> */}
-                    <div className="flex items-center justify-between py-5 border-b border-gray-3">
-                      <div>
-                        <p className="text-dark">Havit HV-G69 USB Gamepad</p>
-                      </div>
-                      <div>
-                        <p className="text-dark text-right">$29.00</p>
-                      </div>
-                    </div>
-
-                    {/* <!-- product item --> */}
-                    <div className="flex items-center justify-between py-5 border-b border-gray-3">
-                      <div>
-                        <p className="text-dark">Shipping Fee</p>
-                      </div>
-                      <div>
-                        <p className="text-dark text-right">$15.00</p>
-                      </div>
-                    </div>
+                    )}
 
                     {/* <!-- total --> */}
                     <div className="flex items-center justify-between pt-5">
@@ -115,7 +164,7 @@ const Checkout = () => {
                       </div>
                       <div>
                         <p className="font-medium text-lg text-dark text-right">
-                          $1072.00
+                          ${Math.max(0, Number(totalPrice.toFixed(2)) + 1.2 - discountAmount).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -123,7 +172,7 @@ const Checkout = () => {
                 </div>
 
                 {/* <!-- coupon box --> */}
-                <Coupon />
+                <Coupon onApplyCoupon={handleApplyCoupon} />
 
                 {/* <!-- shipping box --> */}
                 <ShippingMethod />
@@ -140,7 +189,7 @@ const Checkout = () => {
                 </button>
               </div>
             </div>
-          </form>
+          </article>
         </div>
       </section>
     </>
@@ -148,3 +197,6 @@ const Checkout = () => {
 };
 
 export default Checkout;
+
+
+

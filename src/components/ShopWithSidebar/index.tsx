@@ -85,7 +85,7 @@ const ShopWithSidebar = ({ cartKey }: { cartKey: string }) => {
         const hasCustomPrice = minPrice !== 0 || maxPrice !== 2000;
         const hasCategory = !!category;
         const hasCategoryType = categoryType.length > 0;
-
+        
         const categoryParam = hasCategoryType ? categoryType.join(",") : null;
 
         if (hasCustomPrice) {
@@ -95,10 +95,10 @@ const ShopWithSidebar = ({ cartKey }: { cartKey: string }) => {
             maxPrice,
             pageRequest,
           );
-        } else if (hasCategory) {
-          data = await getProductByType(category, pageRequest);
         } else if (hasCategoryType) {
           data = await getProductByType(categoryParam, pageRequest);
+        } else if (hasCategory) {
+          data = await getProductByType(category, pageRequest);
         } else {
           data = await getAllProducts(pageRequest);
         }
@@ -200,7 +200,6 @@ const ShopWithSidebar = ({ cartKey }: { cartKey: string }) => {
   };
 
   const handlePriceData = (min, max) => {
-    console.log("Received price range from child:", min, max);
     setMinPrice(min);
     setMaxPrice(max);
   };

@@ -1,11 +1,11 @@
-import { selectCartTotal } from "@/redux/slices/cart-slice";
+﻿import { selectCartTotal } from "@/redux/slices/cart-slice";
 import { useAppSelector } from "@/redux/store";
 import { stat } from "node:fs";
-
-const OrderSummary = () => {
+import Link from "next/link"
+const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, code: string }) => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useAppSelector(selectCartTotal);
-
+  
   return (
     <div className="lg:max-w-[455px] w-full">
       {/* <!-- order list box --> */}
@@ -39,6 +39,18 @@ const OrderSummary = () => {
             </div>
           ))}
 
+          {/* <!-- discount --> */}
+          {discountAmount > 0 && (
+            <div className="flex items-center justify-between py-5 border-b border-gray-3">
+              <div>
+                <p className="text-dark">DISCOUNT</p>
+              </div>
+              <div>
+                <p className="text-green-500 text-right">-${discountAmount.toFixed(2)}</p>
+              </div>
+            </div>
+          )}
+
           {/* <!-- total --> */}
           <div className="flex items-center justify-between pt-5">
             <div>
@@ -46,18 +58,19 @@ const OrderSummary = () => {
             </div>
             <div>
               <p className="font-medium text-lg text-dark text-right">
-                ${totalPrice}
+                ${Math.max(0, totalPrice - discountAmount).toFixed(2)}
               </p>
             </div>
           </div>
 
           {/* <!-- checkout button --> */}
-          <button
+          <Link
+            href={`checkout?voucherCode=${code}`}
             type="submit"
             className="w-full flex justify-center font-medium text-white bg-blue py-3 px-6 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
           >
             Process to Checkout
-          </button>
+          </Link>
         </div>
       </div>
     </div>
@@ -65,3 +78,4 @@ const OrderSummary = () => {
 };
 
 export default OrderSummary;
+

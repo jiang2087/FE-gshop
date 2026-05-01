@@ -22,7 +22,7 @@ const SingleListItem = ({ product, cartKey }: { product: any; cartKey: string })
     dispatch(
       addToCartThunk({
         cartKey,
-        productVariantId: product.id,
+        productVariantId: product.productVariants?.[0]?.id,
         quantity: 1,
       })
     )
@@ -33,7 +33,7 @@ const SingleListItem = ({ product, cartKey }: { product: any; cartKey: string })
   };
 
   const handleItemToWishList = () => {
-    dispatch(addItemToWishlist(product.id));
+    dispatch(addItemToWishlist(product.productVariants?.[0]?.id));
   };
 
   const getProductImage = () => {

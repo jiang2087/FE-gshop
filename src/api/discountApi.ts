@@ -1,4 +1,4 @@
-import api from "@/api/axiosInstace";
+﻿import api from "@/api/axiosInstace";
 
 export interface VoucherRequest {
   code: string;
@@ -86,16 +86,14 @@ export const collectVoucher = async (userId: number, code: string) => {
 export const applyVoucher = async (
   userId: number,
   code: string,
-  orderTotal: number,
-  shippingFee: number
+  orderTotal: number
 ) => {
   try {
-    const response = await api.post("/vouchers/apply", null, {
+    const response = await api.post("/apply", null, {
       params: {
         userId,
         code,
         orderTotal,
-        shippingFee,
       },
     });
     return response.data;
@@ -104,7 +102,6 @@ export const applyVoucher = async (
     throw error;
   }
 };
-
 // ============== DISCOUNT ENDPOINTS ==============
 
 // Create a new discount
@@ -113,7 +110,7 @@ export const createDiscount = async (request: DiscountRequest) => {
     const response = await api.post("/discounts", request);
     return response.data;
   } catch (error) {
-    console.error("Error creating discount:", error);
+    console.error("Error creating discount:", error.response?.data.message);
     throw error;
   }
 };
@@ -182,4 +179,22 @@ export const getTop5Vouchers = async (userId: number): Promise<VoucherResponse[]
     console.error("Error fetching top 5 vouchers:", error);
     throw error;
   }
+};
+
+
+
+// Preview voucher discount
+export const getPreviewVoucher = async (
+  code: string,
+  userId: number,
+  orderTotal: number
+) => {
+    const response = await api.get("vouchers/preview", {
+      params: {
+        code,
+        userId,
+        orderTotal,
+      },
+    });
+    return response.data;
 };

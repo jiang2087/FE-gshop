@@ -72,7 +72,6 @@ export const getWishListByUserId = async (id: number) => {
 export const getWishlist = async (userId: number) => {
   try {
     const response = await api.get(`/wishlist/${userId}`);
-    console.log("wishlist", response.data);
     return response.data;
   } catch (error) {
     console.error(`Error fetching wishlist for user ${userId}:`, error);
@@ -80,33 +79,33 @@ export const getWishlist = async (userId: number) => {
   }
 };
 
-export const addWishlist = async (userId: number, productId: number) => {
+export const addWishlist = async (userId: number, productVariantId: number) => {
   try {
     const response = await api.post(`/wishlist`, null, {
       params: {
         userId,
-        productId,
+        productVariantId,
       },
     });
     return response.data;
   } catch (error) {
-    console.error(`Error adding product ${productId} to wishlist:`, error);
+    console.error(`Error adding product variant ${productVariantId} to wishlist:`, error);
     throw error;
   }
 };
 
 
-export const deleteWishlist = async (userId: number, productId: number) => {
+export const deleteWishlist = async (userId: number, productVariantId: number) => {
   try {
     const response = await api.delete(`/wishlist`, {
       params: {
         userId,
-        productId,
+        productVariantId,
       },
     });
     return response.data;
   } catch (error) {
-    console.error(`Error deleting product ${productId} from wishlist:`, error);
+    console.error(`Error deleting product variant ${productVariantId} from wishlist:`, error);
     throw error;
   }
 };

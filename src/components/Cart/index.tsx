@@ -1,25 +1,64 @@
-"use client";
-import React, { useEffect } from "react";
+﻿"use client";
+import React, { useEffect, useState } from "react";
 import Discount from "./Discount";
 import OrderSummary from "./OrderSummary";
-import { useAppSelector, useAppDispatch } from "@/redux/store";
+import { useAppSelector, useAppDispatch, RootState } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
-import { fetchCart, fetchCartTotal } from "@/redux/slices/cart-slice";
+import { Toaster, toast } from "react-hot-toast";
+import {
+  fetchCart,
+  fetchCartTotal,
+  selectCartTotal,
+} from "@/redux/slices/cart-slice";
+import { getPreviewVoucher } from "@/api/discountApi";
 
 const Cart = ({ cartKey }: { cartKey?: string }) => {
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
+  const { user, isAuthenticated } = useAppSelector(
+    (state: RootState) => state.auth,
+  );
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [code, setCode] = useState("")
+  const totalPrice = useAppSelector(selectCartTotal);
+
+  const handleReceiveCode = async (value: string) => {
+    
+    const toastId = toast.loading("Đang kiểm tra...");
+    if (!user?.id) {
+      toast.error("Vui lòng đăng nhập để tiếp tục.", { id: toastId });
+      return;
+    }
+    try {
+      const previewDiscount = await getPreviewVoucher(
+        value,
+        user.id,
+        totalPrice,
+      );
+      setDiscountAmount(previewDiscount ?? 0);
+      setCode(value)
+      toast.success(`áp dụng mã thành công`, { id: toastId });
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Có lỗi xảy ra khi áp dụng mã.";
+      toast.error(message, { id: toastId });
+      setDiscountAmount(0);
+    }
+  };
 
   useEffect(() => {
-    const cartId = 1;
-    dispatch(fetchCart(cartId));
-    dispatch(fetchCartTotal(cartId));
-  }, [dispatch]);
+    if (user?.id) {
+      dispatch(fetchCart(user.id));
+    }
+    if (cartItems?.[0]?.cartId) {
+      dispatch(fetchCartTotal(cartItems[0].cartId));
+    }
+  }, [dispatch, user?.id, cartItems]);
 
   return (
     <>
+      <Toaster position="bottom-right" />
       {/* <!-- ===== Breadcrumb Section Start ===== --> */}
       <section>
         <Breadcrumb title={"Cart"} pages={["Cart"]} />
@@ -69,8 +108,8 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
             </div>
 
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9">
-              <Discount />
-              <OrderSummary />
+              <Discount onChange={handleReceiveCode} />
+              <OrderSummary discountAmount={discountAmount} code={code}/>
             </div>
           </div>
         </section>

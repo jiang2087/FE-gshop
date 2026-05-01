@@ -154,7 +154,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
     dispatch(
       addToCartThunk({
         cartKey: cartKey || "",
-        productVariantId: defaultVariant.id,
+        productVariantId: product1.productVariants[previewImg]?.id || defaultVariant.id ,
         quantity: 1,
       }),
     )
@@ -166,7 +166,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
   const handleToggleWishlist = (e) => {
     e.preventDefault();
-     dispatch(addItemToWishlist(product1.id));
+     dispatch(addItemToWishlist(product1.productVariants?.[previewImg]?.id));
     setLiked(!liked);
   };
 

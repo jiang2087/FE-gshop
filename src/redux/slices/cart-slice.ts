@@ -1,4 +1,4 @@
-import { createSelector, createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+﻿import { createSelector, createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
 import { getCart, getCartTotal, addToCart, updateCartItem, deleteCartItem, clearCart } from "@/api/cartApi";
 
@@ -36,9 +36,9 @@ export const fetchCart = createAsyncThunk<
   CartItem[],
   number,
   { rejectValue: string }
->("cart/fetch", async (cartId, { rejectWithValue }) => {
+>("cart/fetch", async (userId, { rejectWithValue }) => {
   try {
-    const response = await getCart(cartId);
+    const response = await getCart(userId);
     return response;
   } catch (err: any) {
     const message = err.response?.data?.message || "Không thể tải giỏ hàng.";
@@ -120,9 +120,15 @@ export const clearCartThunk = createAsyncThunk<
   }
 });
 
+
 // Utility to recalculate total quantity
 const recalculateCartNumber = (items: CartItem[]) => {
   return items.reduce((sum, item) => sum + item.quantity, 0);
+};
+
+// Utility to recalculate cart total
+const recalculateCartTotal = (items: CartItem[]) => {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 };
 
 export const cart = createSlice({
@@ -144,6 +150,7 @@ export const cart = createSlice({
         state.loading = false;
         state.items = action.payload;
         state.cartNumber = recalculateCartNumber(state.items);
+        state.cartTotal = recalculateCartTotal(state.items);
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;

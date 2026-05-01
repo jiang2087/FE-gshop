@@ -31,7 +31,6 @@ const QuickViewModal = ({cartKey} : {cartKey: string}) => {
           avgRating: reviewStats?.[0]?.avg ?? 5,
         };
         if (isMounted) {
-          console.log("Merged product details:", merged);
           setProduct(merged);
         }
       }
