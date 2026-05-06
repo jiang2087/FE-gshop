@@ -11,11 +11,13 @@ import type { Metadata } from "next";
 import NextTopLoader from "nextjs-toploader";
 import type { PropsWithChildren } from "react";
 import { Providers } from "./providers";
+import { ReduxProvider } from "@/redux/provider";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | NextAdmin - Next.js Dashboard Kit",
-    default: "NextAdmin - Next.js Dashboard Kit",
+    template: "%s | Admin page | gshop",
+    default: "Admin page | gshop",
   },
   description:
     "Next.js admin dashboard toolkit with 200+ templates, UI components, and integrations for fast dashboard development.",
@@ -25,21 +27,23 @@ export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>
-          <NextTopLoader color="#5750F1" showSpinner={false} />
+        <ReduxProvider>
+          <Providers>
+            <NextTopLoader color="#5750F1" showSpinner={false} />
+            <Toaster position="top-right" reverseOrder={false} />
+            <div className="flex min-h-screen">
+              <Sidebar />
 
-          <div className="flex min-h-screen">
-            <Sidebar />
+              <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
+                <Header />
 
-            <div className="w-full bg-gray-2 dark:bg-[#020d1a]">
-              <Header />
-
-              <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
-                {children}
-              </main>
+                <main className="isolate mx-auto w-full max-w-screen-2xl overflow-hidden p-4 md:p-6 2xl:p-10">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
-        </Providers>
+          </Providers>
+        </ReduxProvider>
       </body>
     </html>
   );

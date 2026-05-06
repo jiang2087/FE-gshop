@@ -1,11 +1,17 @@
 ﻿import { selectCartTotal } from "@/redux/slices/cart-slice";
 import { useAppSelector } from "@/redux/store";
 import { stat } from "node:fs";
-import Link from "next/link"
-const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, code: string }) => {
+import Link from "next/link";
+const OrderSummary = ({
+  discountAmount = 0,
+  code,
+}: {
+  discountAmount?: number;
+  code: string;
+}) => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useAppSelector(selectCartTotal);
-  
+
   return (
     <div className="lg:max-w-[455px] w-full">
       {/* <!-- order list box --> */}
@@ -27,7 +33,10 @@ const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, c
 
           {/* <!-- product item --> */}
           {cartItems.map((item, key) => (
-            <div key={key} className="flex items-center justify-between py-5 border-b border-gray-3">
+            <div
+              key={key}
+              className="flex items-center justify-between py-5 border-b border-gray-3"
+            >
               <div>
                 <p className="text-dark">{item.sku}</p>
               </div>
@@ -46,7 +55,9 @@ const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, c
                 <p className="text-dark">DISCOUNT</p>
               </div>
               <div>
-                <p className="text-green-500 text-right">-${discountAmount.toFixed(2)}</p>
+                <p className="text-green-500 text-right">
+                  -${discountAmount.toFixed(2)}
+                </p>
               </div>
             </div>
           )}
@@ -65,7 +76,10 @@ const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, c
 
           {/* <!-- checkout button --> */}
           <Link
-            href={`checkout?voucherCode=${code}`}
+            href={{
+              pathname: "/checkout",
+              query: code ? {code} : {},
+            }}
             type="submit"
             className="w-full flex justify-center font-medium text-white bg-blue py-3 px-6 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
           >
@@ -78,4 +92,3 @@ const OrderSummary = ({ discountAmount = 0, code }: { discountAmount?: number, c
 };
 
 export default OrderSummary;
-

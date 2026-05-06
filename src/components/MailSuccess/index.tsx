@@ -1,26 +1,52 @@
+"use client";
 import React from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+
+const config = {
+  mail: {
+    title: "Successful!",
+    message: "Your message sent successfully",
+    description:
+      "Thank you so much for your message. We check e-mail frequently and will try our best to respond to your inquiry",
+  },
+  order: {
+    title: "Your order has been placed successfully!",
+    message: "Thank you for your purchase. Your order has been confirmed.",
+    description:
+      "We are currently processing your order and will notify you once it has been shipped. Please check your email for further details and updates.",
+  },
+};
+
+const breadcrumbMap = {
+  mail: "Contact Success",
+  order: "Order Success",
+};
 
 const MailSuccess = () => {
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type") || "mail";
   return (
     <>
-      <Breadcrumb title={"MailSuccess"} pages={["MailSuccess"]} />
+      <Breadcrumb
+        title={breadcrumbMap[type] || "Success"}
+        pages={[breadcrumbMap[type] || "Success"]}
+      />
       <section className="overflow-hidden py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className="bg-white rounded-xl shadow-1 px-4 py-10 sm:py-15 lg:py-20 xl:py-25">
             <div className="text-center">
               <h2 className="font-bold text-blue text-4xl lg:text-[45px] lg:leading-[57px] mb-5">
-                Successful!
+                {config[type].title}
               </h2>
 
               <h3 className="font-medium text-dark text-xl sm:text-2xl mb-3">
-                Your message sent successfully
+                {config[type].message}
               </h3>
 
               <p className="max-w-[491px] w-full mx-auto mb-7.5">
-                Thank you so much for your message. We check e-mail frequently
-                and will try our best to respond to your inquiry.
+                {config[type].description}
               </p>
 
               <Link

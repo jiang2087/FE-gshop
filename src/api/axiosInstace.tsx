@@ -10,62 +10,80 @@ const api = axios.create({
 
 // Response interceptor
 
-let refreshing = false;
-let queue: {
-  resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
-}[] = [];
+let refreshingPromise: Promise<void> | null = null;
+
+let queue: Array<{
+  resolve: () => void;
+  reject: (err: any) => void;
+}> = [];
+
+const processQueue = (error: any | null) => {
+  queue.forEach((p) => {
+    if (error) p.reject(error);
+    else p.resolve();
+  });
+  queue = [];
+};
 
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+    const originalUrl = original?.url ?? "";
 
-    // Không refresh cho login / refresh
+    if (!original) {
+      return Promise.reject(error);
+    }
+
     if (
-      original.url?.includes("/auth/login") ||
-      original.url?.includes("/auth/refresh")
+      originalUrl.includes("/auth/login") ||
+      originalUrl.includes("/auth/refresh") ||
+      originalUrl.includes("/auth/logout")
     ) {
       return Promise.reject(error);
     }
 
-    // Chỉ xử lý 401 và chưa retry
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
 
-      // Nếu đang refresh -> chờ
-      if (refreshing) {
+      // 🔥 WAIT if already refreshing
+      if (refreshingPromise) {
         return new Promise((resolve, reject) => {
-          queue.push({ resolve, reject });
-        }).then(() => api(original));
+          queue.push({
+            resolve: () => resolve(api(original)),
+            reject,
+          });
+        });
       }
 
-      refreshing = true;
+      refreshingPromise = api
+        .post("/auth/refresh")
+        .then(() => {
+          processQueue(null);
+        })
+        .catch((err) => {
+          processQueue(err);
+          return Promise.reject(err);
+        })
+        .finally(() => {
+          refreshingPromise = null;
+        });
 
       try {
-        // Cookie refreshToken sẽ tự gửi
-        await api.post("/auth/refresh");
-
-        queue.forEach((p) => p.resolve());
-        queue = [];
-        refreshing = false;
-
-        // Retry request cũ
+        await refreshingPromise;
         return api(original);
       } catch (err) {
-        refreshing = false;
-        queue.forEach((p) => p.reject(err));
-        queue = [];
+        await api.post("/auth/logout").catch(() => {});
 
-        // Logout -> backend xóa cookie
-        await api.post("/auth/logout").catch(() => { });
+        if (typeof window !== "undefined") {
+          window.location.href = "/signin";
+        }
 
-        return Promise.reject(err);
+        return Promise.reject(error);
       }
     }
 
     return Promise.reject(error);
   }
 );
-
 export default api;

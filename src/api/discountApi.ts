@@ -1,4 +1,4 @@
-﻿import api from "@/api/axiosInstace";
+import api from "@/api/axiosInstace";
 
 export interface VoucherRequest {
   code: string;
@@ -82,26 +82,7 @@ export const collectVoucher = async (userId: number, code: string) => {
   }
 };
 
-// Apply voucher to calculate discount
-export const applyVoucher = async (
-  userId: number,
-  code: string,
-  orderTotal: number
-) => {
-  try {
-    const response = await api.post("/apply", null, {
-      params: {
-        userId,
-        code,
-        orderTotal,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error applying voucher ${code}:`, error);
-    throw error;
-  }
-};
+
 // ============== DISCOUNT ENDPOINTS ==============
 
 // Create a new discount
@@ -198,3 +179,20 @@ export const getPreviewVoucher = async (
     });
     return response.data;
 };
+
+export const applyVoucher = async (
+  userId: number,
+  code: string,
+  orderTotal: number
+) => {
+  const res = await api.post("/api/voucher/apply", null, {
+    params: {
+      userId,
+      code,
+      orderTotal,
+    },
+  });
+
+  return res.data;
+};
+

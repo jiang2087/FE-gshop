@@ -1,10 +1,11 @@
 import { PaymentsOverview } from "@/components/Charts/payments-overview";
 import { UsedDevices } from "@/components/Charts/used-devices";
 import { WeeksProfit } from "@/components/Charts/weeks-profit";
-import { TopChannels } from "@/components/Tables/top-channels";
-import { TopChannelsSkeleton } from "@/components/Tables/top-channels/skeleton";
+import { TopProducts } from "@/components/Tables/top-products";
+import { TopProductsSkeleton } from "@/components/Tables/top-products/skeleton";
 import { createTimeFrameExtractor } from "@/utils/timeframe-extractor";
 import { Suspense } from "react";
+import { requireAuth } from "@/lib/auth/server";
 import { ChatsCard } from "./(home)/_components/chats-card";
 import { OverviewCardsGroup } from "./(home)/_components/overview-cards";
 import { OverviewCardsSkeleton } from "./(home)/_components/overview-cards/skeleton";
@@ -17,6 +18,11 @@ type PropsType = {
 };
 
 export default async function Home({ searchParams }: PropsType) {
+  await requireAuth({
+    allowedRoles: ["ROLE_ADMIN"],
+    loginNextPath: "/admin",
+  });
+
   const { selected_time_frame } = await searchParams;
   const extractTimeFrame = createTimeFrameExtractor(selected_time_frame);
   return (
@@ -38,17 +44,17 @@ export default async function Home({ searchParams }: PropsType) {
           className="col-span-12 xl:col-span-5"
         />
 
-        <UsedDevices
+        {/* <UsedDevices
           className="col-span-12 xl:col-span-5"
           key={extractTimeFrame("used_devices")}
           timeFrame={extractTimeFrame("used_devices")?.split(":")[1]}
         />
 
-        <RegionLabels />
+        <RegionLabels /> */}
 
         <div className="col-span-12 grid xl:col-span-8">
-          <Suspense fallback={<TopChannelsSkeleton />}>
-            <TopChannels />
+          <Suspense fallback={<TopProductsSkeleton />}>
+            <TopProducts />
           </Suspense>
         </div>
 

@@ -1,36 +1,59 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast, Toaster } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { login } from "@/redux/slices/authSlice";
+import { useRef } from "react";
 
 
 const Signin = () => {
   const router = useRouter();
+    const shownRef = useRef(false);
+    const params = useSearchParams();
   const dispatch = useAppDispatch();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const auth = useAppSelector((state) => state.auth);
 
- 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+   useEffect(() => {
+    if (shownRef.current) return;
 
-    const toastId = toast.loading("Đang đăng nhập...");
+    const error = params.get("error");
 
-    try {
-      await dispatch(login({ username, password })).unwrap();
-      toast.success("Đăng nhập thành công", { id: toastId });
-      
-      router.push("/");
-    } catch (err: any) {
-      const message = "Sai email hoặc mật khẩu";
-      toast.error(message, { id: toastId });
+    if (error === "session_expired") {
+      toast.error("Session expired. Please sign in again.");
+      shownRef.current = true;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("error");
+      router.replace(url.pathname);
     }
-  };
+  }, [params, router]);
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const toastId = toast.loading("Đang đăng nhập...");
+
+  try {
+    const result = await dispatch(login({ username, password })).unwrap();
+
+    toast.success("Đăng nhập thành công", { id: toastId });
+
+    if (result.roles.includes("ROLE_ADMIN")) {
+      router.push("/admin");
+    } else {
+      router.push("/");
+    }
+
+  } catch (err: any) {
+    toast.error("Sai email hoặc mật khẩu", { id: toastId });
+  }
+};
   return (
     <>
       <Breadcrumb title={"Signin"} pages={["Signin"]} />

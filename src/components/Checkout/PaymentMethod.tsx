@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 
 const PaymentMethod = () => {
-  const [payment, setPayment] = useState("bank");
+  const [payment, setPayment] = useState("cash");
   return (
     <div className="bg-white shadow-1 rounded-[10px] mt-7.5">
       <div className="border-b border-gray-3 py-5 px-4 sm:px-8.5">
@@ -11,7 +11,7 @@ const PaymentMethod = () => {
 
       <div className="p-4 sm:p-8.5">
         <div className="flex flex-col gap-3">
-          <label
+          {/* <label
             htmlFor="bank"
             className="flex cursor-pointer select-none items-center gap-4"
           >
@@ -49,7 +49,7 @@ const PaymentMethod = () => {
                 </div>
               </div>
             </div>
-          </label>
+          </label> */}
 
           <label
             htmlFor="cash"
@@ -91,7 +91,7 @@ const PaymentMethod = () => {
             </div>
           </label>
 
-          <label
+          {/* <label
             htmlFor="paypal"
             className="flex cursor-pointer select-none items-center gap-4"
           >
@@ -128,7 +128,7 @@ const PaymentMethod = () => {
                 </div>
               </div>
             </div>
-          </label>
+          </label> */}
         </div>
       </div>
     </div>

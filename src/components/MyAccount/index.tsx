@@ -4,8 +4,7 @@ import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
 import AddressModal from "./AddressModal";
 import Orders from "../Orders";
-
-import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { persistor, useAppDispatch, useAppSelector } from "@/redux/store";
 import { logout } from "@/redux/slices/authSlice";
 import {
   getAddressesByUser,
@@ -59,6 +58,7 @@ const MyAccount = () => {
   const handleLogout = () => {
     dispatch(logout());
     router.push("/");
+    persistor.purge()
   };
   const closeAddressModal = () => {
     setEditingAddress(null);

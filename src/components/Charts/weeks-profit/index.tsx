@@ -1,15 +1,38 @@
+"use client"
+
 import { PeriodPicker } from "@/components/period-picker";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 import { getWeeksProfitData } from "../../../services/charts.services";
 import { WeeksProfitChart } from "./chart";
+import { getProfitPerDay } from "@/api/adminApi";
 
 type PropsType = {
   timeFrame?: string;
   className?: string;
 };
+export function WeeksProfit({ className, timeFrame }: PropsType) {
+  const [data, setData] = useState<{
+    revenue: { x: string; y: number }[];
+  }>({
+    revenue: [],
+  });
 
-export async function WeeksProfit({ className, timeFrame }: PropsType) {
-  const data = await getWeeksProfitData(timeFrame);
+  useEffect(() => {
+    const fetchWeekProfit = async () => {
+      try {
+        const res = await getProfitPerDay(timeFrame);
+
+        setData({
+          revenue: res,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchWeekProfit();
+  }, [timeFrame]);
 
   return (
     <div

@@ -15,7 +15,7 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
-
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -26,6 +26,7 @@ export default function RootLayout({
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
   }, []);
+
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
@@ -40,7 +41,7 @@ export default function RootLayout({
                   <PreviewSliderProvider>
                     <Header />
                     {children}
-                    <QuickViewModal />
+                    <QuickViewModal cartKey=""/>
                     <CartSidebarModal />
                     <PreviewSliderModal />
                   </PreviewSliderProvider>

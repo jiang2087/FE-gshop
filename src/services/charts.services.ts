@@ -100,15 +100,6 @@ export async function getWeeksProfitData(timeFrame?: string) {
 
   if (timeFrame === "last week") {
     return {
-      sales: [
-        { x: "Sat", y: 33 },
-        { x: "Sun", y: 44 },
-        { x: "Mon", y: 31 },
-        { x: "Tue", y: 57 },
-        { x: "Wed", y: 12 },
-        { x: "Thu", y: 33 },
-        { x: "Fri", y: 55 },
-      ],
       revenue: [
         { x: "Sat", y: 10 },
         { x: "Sun", y: 20 },

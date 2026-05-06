@@ -21,11 +21,10 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
     (state: RootState) => state.auth,
   );
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [code, setCode] = useState("")
+  const [code, setCode] = useState("");
   const totalPrice = useAppSelector(selectCartTotal);
 
   const handleReceiveCode = async (value: string) => {
-    
     const toastId = toast.loading("Đang kiểm tra...");
     if (!user?.id) {
       toast.error("Vui lòng đăng nhập để tiếp tục.", { id: toastId });
@@ -38,12 +37,13 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
         totalPrice,
       );
       setDiscountAmount(previewDiscount ?? 0);
-      setCode(value)
-      toast.success(`áp dụng mã thành công`, { id: toastId });
+      setCode(value);
+      toast.success("áp dụng mã thành công", { id: toastId });
     } catch (error: any) {
       const message = error?.response?.data?.message || "Có lỗi xảy ra khi áp dụng mã.";
       toast.error(message, { id: toastId });
       setDiscountAmount(0);
+      setCode("");
     }
   };
 
@@ -54,7 +54,7 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
     if (cartItems?.[0]?.cartId) {
       dispatch(fetchCartTotal(cartItems[0].cartId));
     }
-  }, [dispatch, user?.id, cartItems]);
+  }, [user?.id]);
 
   return (
     <>
@@ -109,7 +109,7 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
 
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9">
               <Discount onChange={handleReceiveCode} />
-              <OrderSummary discountAmount={discountAmount} code={code}/>
+              <OrderSummary discountAmount={discountAmount} code={code} />
             </div>
           </div>
         </section>

@@ -1,27 +1,41 @@
+"use client"
+
 import { compactFormat } from "@/lib/format-number";
-import { getOverviewData } from "../../fetch";
 import { OverviewCard } from "./card";
 import * as icons from "./icons";
+import { useEffect, useState } from "react";
+import * as adminApi from "@/api/adminApi";
 
-export async function OverviewCardsGroup() {
-  const { views, profit, products, users } = await getOverviewData();
+export function OverviewCardsGroup() {
+  const [infor, setInfor] = useState({
+    profit: 0,
+    totalProduct: 0,
+    totalUser: 0,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const profit = await adminApi.getProfitThisMonth();
+      const totalProduct = await adminApi.countProductVariants();
+      const totalUser = await adminApi.getTotalUsers();
+
+      setInfor({
+        profit,
+        totalProduct,
+        totalUser,
+      });
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+    <div className="grid gap-3 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3 2xl:gap-7.5">
       <OverviewCard
-        label="Total Views"
+        label="Total profit this month"
         data={{
-          ...views,
-          value: compactFormat(views.value),
-        }}
-        Icon={icons.Views}
-      />
-
-      <OverviewCard
-        label="Total Profit"
-        data={{
-          ...profit,
-          value: "$" + compactFormat(profit.value),
+          growthRate: -1.2,
+          value: "$" + infor.profit,
         }}
         Icon={icons.Profit}
       />
@@ -29,8 +43,8 @@ export async function OverviewCardsGroup() {
       <OverviewCard
         label="Total Products"
         data={{
-          ...products,
-          value: compactFormat(products.value),
+          growthRate: 1.5,
+          value: infor.totalProduct,
         }}
         Icon={icons.Product}
       />
@@ -38,8 +52,8 @@ export async function OverviewCardsGroup() {
       <OverviewCard
         label="Total Users"
         data={{
-          ...users,
-          value: compactFormat(users.value),
+          growthRate: 4.3,
+          value: infor.totalUser,
         }}
         Icon={icons.Users}
       />

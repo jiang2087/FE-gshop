@@ -1,3 +1,4 @@
+import { url } from "node:inspector";
 import * as Icons from "../icons";
 
 export const NAV_DATA = [
@@ -7,11 +8,8 @@ export const NAV_DATA = [
       {
         title: "Dashboard",
         icon: Icons.HomeIcon,
+        url: "/admin",
         items: [
-          {
-            title: "eCommerce",
-            url: "/admin",
-          },
         ],
       },
       {
@@ -27,20 +25,6 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Forms",
-        icon: Icons.Alphabet,
-        items: [
-          {
-            title: "Form Elements",
-            url: "/admin/forms/form-elements",
-          },
-          {
-            title: "Form Layout",
-            url: "/admin/forms/form-layout",
-          },
-        ],
-      },
-      {
         title: "Tables",
         url: "/admin/tables",
         icon: Icons.Table,
@@ -53,27 +37,16 @@ export const NAV_DATA = [
       },
       {
         title: "Products",
-      icon: Icons.ProductIcon,
+        icon: Icons.ProductIcon,
+        url: "/admin/products",
         items: [
-          {
-            title: "Statistical",
-            url: "/admin/products/statistical",
-          }, 
-          {
-            title: "Products management",
-            url: "/admin/products/products-management",
-          },
         ],
       },
       {
-        title: "Pages",
+        title: "Settings",
         icon: Icons.Alphabet,
-        items: [
-          {
-            title: "Settings",
-            url: "/admin/pages/settings",
-          },
-        ],
+        url: "/admin/pages/settings",
+        items: [],
       },
     ],
   },

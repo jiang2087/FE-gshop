@@ -182,3 +182,23 @@ export const getProductsByPriceRange = async (types, min, max, params) => {
     throw error;
   }
 };
+
+export const getProfitPerMonth = async () => {
+  try {
+    const response = await api.get(`/products/profit/per-month`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching profit per month:", error);
+    throw error;
+  }
+};
+
+export const getProfitThisMonth = async () => {
+  try {
+    const response = await api.get(`/products/profit/month`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching profit this month:", error);
+    throw error;
+  }
+};

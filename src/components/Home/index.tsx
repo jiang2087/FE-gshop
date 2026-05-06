@@ -13,15 +13,18 @@ import { getReviewStats, getTopReviews } from "@/api/reviewApi";
 import TopVoucher from "./TopVoucher/index";
 import { getTop5Vouchers, VoucherResponse } from "@/api/discountApi";
 import { RootState, useAppSelector } from "@/redux/store";
+import { useRouter } from "next/navigation";
 
 
 const Home = ({cartKey} : {cartKey: string}) => {
+
   const [products, setProducts] = useState([]);
   const [topReviews, setTopReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [vouchers, setVouchers] = useState<VoucherResponse[]>([]);
   const {user} = useAppSelector((state: RootState) => state.auth);
+  const router = useRouter()
 
   useEffect(() => {
 
@@ -79,7 +82,7 @@ const Home = ({cartKey} : {cartKey: string}) => {
 
 
   return (
-    <main>
+    <main className="overflow-hidden">
       
       <Hero products={products} />
       {vouchers.length > 0 && <TopVoucher vouchers={vouchers}/>}

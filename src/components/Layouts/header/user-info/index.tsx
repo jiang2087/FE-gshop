@@ -11,15 +11,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
+import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
+import { useRouter } from "next/navigation";
+import { logout } from "@/redux/slices/authSlice";
+import { persistor } from "@/redux/store"
+
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
-
+  const dispatch = useAppDispatch()
+  const router = useRouter();
+  const user = useAppSelector((state: RootState) => state.auth.user);
   const USER = {
     name: "John Smith",
     email: "johnson@nextadmin.com",
     img: "/images/user/user-04.png",
   };
+
+  const handleLogout = (e) => {
+    e.preventDefault();
+    dispatch(logout());
+    persistor.purge();
+    router.push("/");
+  }
 
   return (
     <Dropdown isOpen={isOpen} setIsOpen={setIsOpen}>
@@ -28,15 +42,15 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-3">
           <Image
-            src={USER.img}
-            className="size-12"
-            alt={`Avatar of ${USER.name}`}
+            src={user?.imageUrl || "/images/user/user-04.png"}
+            className="w-12"
+            alt={`Avatar of ${user?.username}`}
             role="presentation"
-            width={75}
-            height={75}
+            width={50}
+            height={50}
           />
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{USER.name}</span>
+            <span>{user?.username}</span>
 
             <ChevronUpIcon
               aria-hidden
@@ -58,20 +72,20 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
           <Image
-            src={USER.img}
-            className="size-12"
-            alt={`Avatar for ${USER.name}`}
+            src={user?.imageUrl || USER.img}
+            className="h-auto w-10"
+            alt={`Avatar for ${user?.username}`}
             role="presentation"
-            width={200}
-            height={200}
+            width={100}
+            height={100}
           />
 
           <figcaption className="space-y-1 text-base font-medium">
             <div className="mb-2 leading-none text-dark dark:text-white">
-              {USER.name}
+              {user?.username}
             </div>
 
-            <div className="leading-none text-gray-6">{USER.email}</div>
+            <div className="leading-none text-gray-6">{user?.email || USER.email}</div>
           </figcaption>
         </figure>
 
@@ -79,7 +93,7 @@ export function UserInfo() {
 
         <div className="p-2 text-base text-[#4B5563] dark:text-dark-6 [&>*]:cursor-pointer">
           <Link
-            href={"/profile"}
+            href={"/admin/profile"}
             onClick={() => setIsOpen(false)}
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
           >
@@ -89,7 +103,7 @@ export function UserInfo() {
           </Link>
 
           <Link
-            href={"/pages/settings"}
+            href={"/admin/pages/settings"}
             onClick={() => setIsOpen(false)}
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
           >
@@ -106,10 +120,9 @@ export function UserInfo() {
         <div className="p-2 text-base text-[#4B5563] dark:text-dark-6">
           <button
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
-            onClick={() => setIsOpen(false)}
+            onClick={handleLogout}
           >
             <LogOutIcon />
-
             <span className="text-base font-medium">Log out</span>
           </button>
         </div>

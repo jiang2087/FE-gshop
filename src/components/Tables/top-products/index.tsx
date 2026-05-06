@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Table,
   TableBody,
@@ -7,11 +9,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Image from "next/image";
-import { getTopProducts } from "../fetch";
+import { useEffect, useState } from "react";
+import { getTopProducts } from "@/api/adminApi";
 
-export async function TopProducts() {
-  const data = await getTopProducts();
+export function TopProducts() {
 
+ const [data, setData] = useState([]);
+
+useEffect(() => {
+  const fetchTopProduct = async () => {
+    try {
+      const res = await getTopProducts(0, 5);
+      setData(res.content); 
+    } catch (error) {
+      console.error("Error fetching top products:", error);
+    }
+  };
+
+  fetchTopProduct();
+}, []);
   return (
     <div className="rounded-[10px] bg-white shadow-1 dark:bg-gray-dark dark:shadow-card">
       <div className="px-6 py-4 sm:px-7 sm:py-5 xl:px-8.5">
@@ -36,10 +52,10 @@ export async function TopProducts() {
         </TableHeader>
 
         <TableBody>
-          {data.map((product) => (
+          {data.map((product, index) => (
             <TableRow
               className="text-base font-medium text-dark dark:text-white"
-              key={product.name + product.profit}
+              key={index}
             >
               <TableCell className="flex min-w-fit items-center gap-3 pl-5 sm:pl-6 xl:pl-7.5">
                 <Image
@@ -50,10 +66,10 @@ export async function TopProducts() {
                   alt={"Image for product " + product.name}
                   role="presentation"
                 />
-                <div>{product.name}</div>
+                <div>{product.productName}</div>
               </TableCell>
 
-              <TableCell>{product.category}</TableCell>
+              <TableCell>{product.productType}</TableCell>
 
               <TableCell>${product.price}</TableCell>
 
