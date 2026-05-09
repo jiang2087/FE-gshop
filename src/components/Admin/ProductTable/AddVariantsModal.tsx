@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { X, Upload, DollarSign, Box, Palette, Image as ImageIcon, Edit, Plus, Info, Check } from "lucide-react"
+import { X, Upload, DollarSign, Box, Palette, Image as ImageIcon, Edit, Plus, Check } from "lucide-react"
 import { toast } from "react-hot-toast"
-import { getColors } from "@/api/adminApi"
+import { getColors, createVariant, updateVariant, deleteVariant, deleteColor, VariantRequest } from "@/api/adminApi"
 
 interface ColorOption {
     id: number
@@ -22,40 +22,11 @@ function isLightColor(hex: string): boolean {
 interface AddVariantsModalProps {
     isOpen: boolean
     onClose: () => void
-    onAdd: (variant: any) => void
+    onSuccess: () => void
+    productId: number
     productType?: string
     productName?: string
 }
-
-const AdditionalInfo = {
-    laptop: [
-        { key: "cpu", label: "CPU" },
-        { key: "ram", label: "RAM" },
-        { key: "storage", label: "Storage" },
-        { key: "gpu", label: "GPU" },
-        { key: "resolution", label: "Resolution" },
-        { key: "screenSize", label: "Screen Size" },
-    ],
-    mobile: [
-        { key: "ScreenSize", label: "Screen Size (inch)" },
-        { key: "resolution", label: "Resolution" },
-        { key: "camera", label: "Camera" },
-        { key: "battery", label: "Battery" },
-    ],
-    watches: [
-        { key: "gender", label: "Gender" },
-        { key: "material", label: "Material" },
-        { key: "batteryLife", label: "Battery Life (hours)" },
-        { key: "gps", label: "GPS" },
-    ],
-    televisions: [
-        { key: "screenSize", label: "Screen Size (inch)" },
-        { key: "resolution", label: "Resolution" },
-        { key: "refreshRate", label: "Refresh Rate (Hz)" },
-        { key: "weight", label: "Weight (kg)" },
-        { key: "warrantyMonths", label: "Warranty (months)" },
-    ],
-};
 
 interface VariantFormProps {
     initialData?: any
@@ -77,7 +48,6 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
         image: initialData?.image || "",
         isDefault: initialData?.isDefault || false,
     })
-    const [dynamicFields, setDynamicFields] = useState<any>(initialData?.specifications || {})
     const [previewImage, setPreviewImage] = useState<string | null>(initialData?.image || null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [colors, setColors] = useState<ColorOption[]>([])
@@ -93,23 +63,14 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
 
         if (initialData) {
             setFormData({
-                price: initialData.price,
-                stockQuantity: initialData.stockQuantity,
-                colorName: initialData.color?.name || initialData.colorName,
-                hexCode: initialData.color?.hexCode || initialData.hexCode,
-                image: initialData.image,
-                isDefault: initialData.isDefault,
+                price: initialData.price || "",
+                stockQuantity: initialData.stockQuantity || "",
+                colorName: initialData.color?.name || initialData.colorName || "",
+                hexCode: initialData.color?.hexCode || initialData.hexCode || "#000000",
+                image: initialData.image || "",
+                isDefault: initialData.isDefault || false,
             })
-            setDynamicFields(initialData.specifications || {})
             setPreviewImage(initialData.image || null)
-        } else {
-            // Initialize dynamic fields based on product type for new variant
-            const fields = AdditionalInfo[productType.toLowerCase()] || []
-            const initialDynamicData = {}
-            fields.forEach(field => {
-                initialDynamicData[field.key] = ""
-            })
-            setDynamicFields(initialDynamicData)
         }
     }, [initialData, productType])
 
@@ -132,19 +93,33 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
         setShowCustomColor(false)
     }
 
+    const handleDeleteColor = async (e: React.MouseEvent, colorId: number) => {
+        e.stopPropagation()
+        if (window.confirm("Are you sure you want to delete this color?")) {
+            try {
+                await deleteColor(colorId)
+                setColors(prev => prev.filter(c => c.id !== colorId))
+                toast.success("Color deleted successfully")
+                // Reset form data if the deleted color was selected
+                const deletedColor = colors.find(c => c.id === colorId)
+                if (deletedColor && formData.colorName === deletedColor.name && formData.hexCode === deletedColor.hexCode) {
+                    setFormData(prev => ({ ...prev, colorName: "", hexCode: "#000000" }))
+                }
+            } catch (error) {
+                console.error("Error deleting color:", error)
+                toast.error("Failed to delete color")
+            }
+        }
+    }
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target as HTMLInputElement
-        if (name in formData) {
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value
-            }))
-        } else {
-            setDynamicFields(prev => ({
-                ...prev,
-                [name]: value
-            }))
-        }
+        const finalValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : (type === 'number' ? Number(value) : value)
+
+        setFormData(prev => ({
+            ...prev,
+            [name]: finalValue
+        }))
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,14 +133,8 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        const fullData = {
-            ...formData,
-            specifications: dynamicFields
-        }
-        onSubmit(fullData)
+        onSubmit(formData)
     }
-
-    const currentFields = AdditionalInfo[productType.toLowerCase()] || []
 
     return (
         <div
@@ -187,7 +156,7 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
                     onClick={onClose}
                     className="p-2 hover:bg-gray-100 dark:hover:bg-dark-4 rounded-full transition-colors text-dark-2"
                 >
-                    <X className="h-6 w-6 text-dark-2 hover:text-red-500 transition-colors" />
+                    <X className="h-6 w-6 text-dark-2 dark:text-white hover:text-red-500 dark:hover:text-red-500 transition-colors" />
                 </button>
             </div>
 
@@ -234,22 +203,30 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
                         {colors.map((color) => {
                             const isSelected = formData.colorName === color.name && formData.hexCode === color.hexCode
                             return (
-                                <button
-                                    key={color.id}
-                                    type="button"
-                                    title={`${color.name} (${color.hexCode})`}
-                                    onClick={() => handleSelectColor(color)}
-                                    className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none ${
-                                        isSelected
+                                <div key={color.id} className="relative group">
+                                    <button
+                                        type="button"
+                                        title={`${color.name} (${color.hexCode})`}
+                                        onClick={() => handleSelectColor(color)}
+                                        className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none ${isSelected
                                             ? 'border-indigo-500 ring-2 ring-indigo-300 dark:ring-indigo-700 scale-110'
                                             : 'border-gray-200 dark:border-dark-4 hover:border-gray-400'
-                                    }`}
-                                    style={{ backgroundColor: color.hexCode }}
-                                >
-                                    {isSelected && (
-                                        <Check className="h-4 w-4 absolute inset-0 m-auto drop-shadow-md" style={{ color: isLightColor(color.hexCode) ? '#1e1e2e' : '#ffffff' }} />
-                                    )}
-                                </button>
+                                            }`}
+                                        style={{ backgroundColor: color.hexCode }}
+                                    >
+                                        {isSelected && (
+                                            <Check className="h-4 w-4 absolute inset-0 m-auto drop-shadow-md" style={{ color: isLightColor(color.hexCode) ? '#1e1e2e' : '#ffffff' }} />
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleDeleteColor(e, color.id)}
+                                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-light-5 hover:bg-dark hover:text-white text-dark rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                        title="Delete color"
+                                    >
+                                        <X className="h-2.5 w-2.5 text-red-dark" />
+                                    </button>
+                                </div>
                             )
                         })}
                         {/* Add custom color button */}
@@ -257,11 +234,10 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
                             type="button"
                             onClick={() => setShowCustomColor(!showCustomColor)}
                             title="Add custom color"
-                            className={`w-9 h-9 rounded-full border-2 border-dashed transition-all duration-200 hover:scale-110 flex items-center justify-center ${
-                                showCustomColor
-                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                    : 'border-gray-300 dark:border-dark-4 bg-white dark:bg-dark-2 hover:border-indigo-400'
-                            }`}
+                            className={`w-9 h-9 rounded-full border-2 border-dashed transition-all duration-200 hover:scale-110 flex items-center justify-center ${showCustomColor
+                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                                : 'border-gray-300 dark:border-dark-4 bg-white dark:bg-dark-2 hover:border-indigo-400'
+                                }`}
                         >
                             <Plus className={`h-4 w-4 transition-transform duration-200 ${showCustomColor ? 'rotate-45 text-indigo-500' : 'text-gray-400'}`} />
                         </button>
@@ -335,30 +311,6 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
                     </div>
                 </div>
 
-                {/* Dynamic Fields Section */}
-                {currentFields.length > 0 && (
-                    <div className="pt-4 border-t border-gray-100 dark:border-dark-4">
-                        <h3 className="text-sm font-bold text-dark-2 dark:text-meta-5 flex items-center gap-2 mb-4">
-                            <Info className="h-4 w-4 text-indigo-500" /> Specific Specifications ({productType})
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {currentFields.map((field) => (
-                                <div key={field.key} className="space-y-1">
-                                    <label className="text-xs font-bold text-gray-500 dark:text-slate-400">{field.label}</label>
-                                    <input
-                                        type="text"
-                                        name={field.key}
-                                        value={dynamicFields[field.key] || ""}
-                                        onChange={handleChange}
-                                        placeholder={`Enter ${field.label.toLowerCase()}`}
-                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-dark-2 rounded-lg border border-gray-100 dark:border-dark-4 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-dark-2 dark:text-meta-5 transition-all"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 <div className="flex items-center gap-2">
                     <input
                         type="checkbox"
@@ -379,14 +331,14 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2.5 text-sm font-bold text-dark-2 dark:text-meta-5 bg-gray-100 hover:bg-gray-200 dark:bg-dark-3 dark:hover:bg-dark-4 rounded-xl transition-all"
+                    className="px-6 py-2.5 text-sm font-bold text-dark-2 dark:text-meta-5 bg-gray-100 hover:bg-gray-3 dark:bg-dark-3 dark:hover:bg-dark-4 rounded-xl transition-all"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
                     form="variant-form"
-                    className="px-6 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95"
+                    className="px-6 py-2.5 text-sm font-bold text-dark-2 dark:text-meta-5 bg-gray-100 hover:bg-gray-3 dark:bg-dark-3 dark:hover:bg-dark-4 rounded-xl transition-all"
                 >
                     {submitText}
                 </button>
@@ -395,13 +347,32 @@ function VariantForm({ initialData, onSubmit, onClose, productType, productName,
     )
 }
 
-export default function AddVariantsModal({ isOpen, onClose, onAdd, productType = "laptop", productName }: AddVariantsModalProps) {
+export default function AddVariantsModal({ isOpen, onClose, onSuccess, productId, productType = "laptop", productName }: AddVariantsModalProps) {
+    const [loading, setLoading] = useState(false)
     if (!isOpen) return null
 
-    const handleAdd = (data: any) => {
-        onAdd(data)
-        toast.success("New variant added successfully!")
-        onClose()
+    const handleAdd = async (data: any) => {
+        setLoading(true)
+        try {
+            const request: VariantRequest = {
+                price: Number(data.price),
+                hexCode: data.hexCode,
+                colorName: data.colorName,
+                image: data.image,
+                stock: Number(data.stockQuantity),
+                isDefault: data.isDefault
+            }
+
+            await createVariant(productId, request)
+            toast.success("New variant added successfully!")
+            onSuccess()
+            onClose()
+        } catch (error: any) {
+            console.error("Error creating variant:", error)
+            toast.error(error?.response?.data || "Failed to add variant")
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -409,15 +380,17 @@ export default function AddVariantsModal({ isOpen, onClose, onAdd, productType =
             className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-24 overflow-y-auto cursor-pointer"
             onClick={onClose}
         >
-            <VariantForm
-                title="Add New Variant"
-                submitText="Add Variant"
-                icon={<Plus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
-                onSubmit={handleAdd}
-                onClose={onClose}
-                productType={productType}
-                productName={productName}
-            />
+            <div className={loading ? "opacity-70 pointer-events-none" : ""}>
+                <VariantForm
+                    title="Add New Variant"
+                    submitText={loading ? "Adding..." : "Add Variant"}
+                    icon={<Plus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                    onSubmit={handleAdd}
+                    onClose={onClose}
+                    productType={productType}
+                    productName={productName}
+                />
+            </div>
         </div>
     )
 }
@@ -425,19 +398,38 @@ export default function AddVariantsModal({ isOpen, onClose, onAdd, productType =
 interface EditVariantsModalProps {
     isOpen: boolean
     onClose: () => void
-    onUpdate: (variant: any) => void
+    onSuccess: () => void
     variant: any
     productType?: string
     productName?: string
 }
 
-export function EditVariantsModal({ isOpen, onClose, onUpdate, variant, productType = "laptop", productName }: EditVariantsModalProps) {
+export function EditVariantsModal({ isOpen, onClose, onSuccess, variant, productType = "laptop", productName }: EditVariantsModalProps) {
+    const [loading, setLoading] = useState(false)
     if (!isOpen) return null
 
-    const handleUpdate = (data: any) => {
-        onUpdate({ ...variant, ...data })
-        toast.success("Variant updated successfully!")
-        onClose()
+    const handleUpdate = async (data: any) => {
+        setLoading(true)
+        try {
+            const request: VariantRequest = {
+                price: Number(data.price),
+                hexCode: data.hexCode,
+                colorName: data.colorName,
+                image: data.image,
+                stock: Number(data.stockQuantity),
+                isDefault: data.isDefault
+            }
+
+            await updateVariant(variant.id, request)
+            toast.success("Variant updated successfully!")
+            onSuccess()
+            onClose()
+        } catch (error: any) {
+            console.error("Error updating variant:", error)
+            toast.error(error?.response?.data || "Failed to update variant")
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -445,16 +437,19 @@ export function EditVariantsModal({ isOpen, onClose, onUpdate, variant, productT
             className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm p-4 pt-24 overflow-y-auto cursor-pointer"
             onClick={onClose}
         >
-            <VariantForm
-                initialData={variant}
-                title="Edit Variant"
-                submitText="Update Variant"
-                icon={<Edit className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
-                onSubmit={handleUpdate}
-                onClose={onClose}
-                productType={productType}
-                productName={productName}
-            />
+            <div className={`relative w-full max-w-2xl ${loading ? "opacity-70 pointer-events-none" : ""}`} onClick={(e) => e.stopPropagation()}>
+                <VariantForm
+                    initialData={variant}
+                    title="Edit Variant"
+                    submitText={loading ? "Updating..." : "Update Variant"}
+                    icon={<Edit className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                    onSubmit={handleUpdate}
+                    onClose={onClose}
+                    productType={productType}
+                    productName={productName}
+                />
+
+            </div>
         </div>
     )
 }

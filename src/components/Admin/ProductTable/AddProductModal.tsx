@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, Upload, Package, Type, Hash, FileText, Edit, DollarSign, Box, Palette, CheckCircle, Image as ImageIcon, Plus, Check, Cpu, HardDrive, Monitor, Smartphone, Watch, Tv, Ruler } from "lucide-react"
-import { getColors } from "@/api/adminApi"
+import { getColors, deleteColor } from "@/api/adminApi"
+import { toast } from "react-hot-toast"
 
 interface ColorOption {
     id: number
@@ -41,7 +42,7 @@ const PRODUCT_TYPE_FIELDS: Record<string, SpecField[]> = {
     ],
     MOBILE: [
         { key: 'model', label: 'Model', type: 'text', placeholder: 'e.g. iPhone 15 Pro', icon: <Smartphone className="h-4 w-4 text-blue-500" /> },
-        { key: 'ScreenSize', label: 'Screen Size (inch)', type: 'number', placeholder: 'e.g. 6.7', icon: <Monitor className="h-4 w-4 text-cyan-500" /> },
+        { key: 'screenSize', label: 'Screen Size (inch)', type: 'number', placeholder: 'e.g. 6.7', icon: <Monitor className="h-4 w-4 text-cyan-500" /> },
         { key: 'resolution', label: 'Resolution', type: 'text', placeholder: 'e.g. 2796x1290', icon: <Monitor className="h-4 w-4 text-indigo-500" /> },
         { key: 'camera', label: 'Camera', type: 'text', placeholder: 'e.g. 48MP + 12MP', icon: <Smartphone className="h-4 w-4 text-pink-500" /> },
         { key: 'battery', label: 'Battery', type: 'text', placeholder: 'e.g. 4422 mAh', icon: <Smartphone className="h-4 w-4 text-green-500" /> },
@@ -72,66 +73,155 @@ interface ProductFormProps {
     icon: React.ReactNode
 }
 
+// Helper: build initial form state from product data
+function getInitialFormData(initialData?: any) {
+    if (!initialData) {
+        return {
+            productType: "LAPTOP",
+            brand: "",
+            thumbnail: "",
+            name: "",
+            description: "",
+            colorName: "Black",
+            hexCode: "#000000",
+            price: 0,
+            stockQuantity: 0,
+            isDefault: true,
+            active: true,
+            attributes: [] as any[]
+        }
+    }
+
+    const defaultVariant = initialData.productVariants?.find((v: any) => v.isDefault) || initialData.productVariants?.[0]
+
+    // Robust product type normalization
+    const rawType = (initialData.productType || initialData.category || initialData.type || "LAPTOP").toString().toUpperCase().trim();
+    let productType = rawType;
+
+    // Map common aliases and singular/plural forms
+    const typeMap: Record<string, string> = {
+        "LAPTOP": "LAPTOP",
+        "LAPTOPS": "LAPTOP",
+        "MOBILE": "MOBILE",
+        "MOBILES": "MOBILE",
+        "PHONE": "MOBILE",
+        "SMARTPHONE": "MOBILE",
+        "WATCH": "WATCHES",
+        "WATCHES": "WATCHES",
+        "TV": "TELEVISION",
+        "TELEVISION": "TELEVISION",
+        "TELEVISIONS": "TELEVISION"
+    };
+
+    productType = typeMap[productType] || productType;
+
+    // Fallback if not in our configuration
+    if (!PRODUCT_TYPE_FIELDS[productType]) {
+        // Try to find a partial match or default to LAPTOP
+        const keys = Object.keys(PRODUCT_TYPE_FIELDS);
+        const match = keys.find(k => productType.includes(k) || k.includes(productType));
+        productType = match || "LAPTOP";
+    }
+
+    const specFields = PRODUCT_TYPE_FIELDS[productType] || []
+    const specData: Record<string, any> = {}
+
+    // Extract values from attributes array (case-insensitive key matching)
+    if (initialData.attributes && Array.isArray(initialData.attributes)) {
+        initialData.attributes.forEach((attr: any) => {
+            const field = specFields.find(f => f.key.toLowerCase() === attr.key.toLowerCase());
+            if (field) {
+                specData[field.key] = attr.value;
+            } else {
+                specData[attr.key] = attr.value;
+            }
+        })
+    }
+
+    // Check top-level properties (case-insensitive)
+    specFields.forEach((field: SpecField) => {
+        // Try exact match first
+        if (initialData[field.key] !== undefined) {
+            specData[field.key] = initialData[field.key];
+        } else {
+            // Try case-insensitive top-level match
+            const topKey = Object.keys(initialData).find(k => k.toLowerCase() === field.key.toLowerCase());
+            if (topKey && initialData[topKey] !== undefined) {
+                specData[field.key] = initialData[topKey];
+            }
+        }
+    })
+
+    return {
+        productType,
+        brand: initialData.brand || "",
+        thumbnail: initialData.thumbnail || "",
+        name: initialData.name || "",
+        description: initialData.description || "",
+        colorName: defaultVariant?.color?.name || defaultVariant?.colorName || "",
+        hexCode: defaultVariant?.color?.hexCode || defaultVariant?.hexCode || "#000000",
+        price: defaultVariant?.price || 0,
+        stockQuantity: defaultVariant?.stockQuantity || 0,
+        isDefault: defaultVariant?.isDefault !== undefined ? defaultVariant.isDefault : true,
+        active: initialData.active !== undefined ? initialData.active : true,
+        attributes: initialData.attributes || [],
+        ...specData
+    }
+}
+
 function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon }: ProductFormProps) {
     const [mounted, setMounted] = useState(false)
-    const [formData, setFormData] = useState({
-        productType: "LAPTOP",
-        brand: "",
-        thumbnail: "",
-        name: "",
-        description: "",
-        colorName: "",
-        hexCode: "#000000",
-        price: 0,
-        stockQuantity: 0,
-        isDefault: true,
-        active: true,
-        attibutes: []
+    const [formData, setFormData] = useState(() => {
+        const initial = getInitialFormData(initialData);
+        // Separating dynamic fields from base form data
+        return initial;
     })
-    const [previewImage, setPreviewImage] = useState<string | null>(null)
+
+    // Extract dynamic fields into a separate state for easier management
+    const [dynamicFields, setDynamicFields] = useState<Record<string, any>>(() => {
+        const initial = getInitialFormData(initialData);
+        const dynamic: Record<string, any> = {};
+        const allSpecKeys = Object.values(PRODUCT_TYPE_FIELDS).flat().map(f => f.key);
+
+        Object.keys(initial).forEach(key => {
+            if (allSpecKeys.includes(key)) {
+                dynamic[key] = initial[key];
+            }
+        });
+        return dynamic;
+    });
+
+    const [previewImage, setPreviewImage] = useState<string | null>(initialData?.thumbnail || null)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [colors, setColors] = useState<ColorOption[]>([])
     const [showCustomColor, setShowCustomColor] = useState(false)
     const [customColorName, setCustomColorName] = useState("")
     const [customHexCode, setCustomHexCode] = useState("#6366f1")
 
+    // Fetch colors on mount
     useEffect(() => {
         setMounted(true)
-        // Fetch available colors from API
         getColors()
             .then((data: ColorOption[]) => setColors(data))
             .catch(() => setColors([]))
+    }, [])
 
+    // Sync formData khi initialData thay đổi (ví dụ mở modal với product khác)
+    useEffect(() => {
         if (initialData) {
-            // Find the default variant or use the first one
-            const defaultVariant = initialData.productVariants?.find((v: any) => v.isDefault) || initialData.productVariants?.[0]
-
-            // Collect type-specific spec fields from initialData
-            const productType = initialData.productType?.toUpperCase() || "LAPTOP"
-            const specFields = PRODUCT_TYPE_FIELDS[productType] || []
-            const specData: Record<string, any> = {}
-            specFields.forEach(field => {
-                if (initialData[field.key] !== undefined) {
-                    specData[field.key] = initialData[field.key]
-                }
-            })
-
-            setFormData({
-                productType,
-                brand: initialData.brand || "",
-                thumbnail: initialData.thumbnail || "",
-                name: initialData.name || "",
-                description: initialData.description || "",
-                colorName: defaultVariant?.color?.name || defaultVariant?.colorName || "",
-                hexCode: defaultVariant?.color?.hexCode || defaultVariant?.hexCode || "#000000",
-                price: defaultVariant?.price || 0,
-                stockQuantity: defaultVariant?.stockQuantity || 0,
-                isDefault: defaultVariant?.isDefault !== undefined ? defaultVariant.isDefault : true,
-                active: initialData.active !== undefined ? initialData.active : true,
-                attibutes: initialData.attibutes || [],
-                ...specData
-            })
+            const initial = getInitialFormData(initialData);
+            setFormData(initial)
             setPreviewImage(initialData.thumbnail || null)
+
+            // Sync dynamic fields
+            const dynamic: Record<string, any> = {};
+            const allSpecKeys = Object.values(PRODUCT_TYPE_FIELDS).flat().map(f => f.key);
+            Object.keys(initial).forEach(key => {
+                if (allSpecKeys.includes(key)) {
+                    dynamic[key] = initial[key];
+                }
+            });
+            setDynamicFields(dynamic);
         }
     }, [initialData])
 
@@ -154,12 +244,38 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
         setShowCustomColor(false)
     }
 
+    const handleDeleteColor = async (e: React.MouseEvent, colorId: number) => {
+        e.stopPropagation()
+        if (window.confirm("Are you sure you want to delete this color?")) {
+            try {
+                await deleteColor(colorId)
+                setColors(prev => prev.filter(c => c.id !== colorId))
+                toast.success("Color deleted successfully")
+                // Reset form data if the deleted color was selected
+                const deletedColor = colors.find(c => c.id === colorId)
+                if (deletedColor && formData.colorName === deletedColor.name && formData.hexCode === deletedColor.hexCode) {
+                    setFormData(prev => ({ ...prev, colorName: "", hexCode: "#000000" }))
+                }
+            } catch (error) {
+                console.error("Error deleting color:", error)
+                toast.error("Failed to delete color")
+            }
+        }
+    }
+
     if (!mounted) return null
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target
         const finalValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : (type === 'number' ? Number(value) : value)
-        setFormData(prev => ({ ...prev, [name]: finalValue }))
+
+        // Check if it's a dynamic field or base field
+        const allSpecKeys = Object.values(PRODUCT_TYPE_FIELDS).flat().map(f => f.key);
+        if (allSpecKeys.includes(name)) {
+            setDynamicFields(prev => ({ ...prev, [name]: finalValue }))
+        } else {
+            setFormData(prev => ({ ...prev, [name]: finalValue }))
+        }
     }
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,7 +289,29 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        onSubmit(formData)
+
+        const currentSpecFields = PRODUCT_TYPE_FIELDS[formData.productType] || []
+
+        // Transform dynamic fields into attributes array format [{key, value}]
+        const attributes = currentSpecFields
+            .map(field => ({
+                key: field.key,
+                value: dynamicFields[field.key]
+            }))
+            .filter(attr => attr.value !== undefined && attr.value !== "" && attr.value !== null)
+
+        // Create final data for submission
+        const dataToSubmit = {
+            ...formData,
+            attributes
+        }
+
+        // Clean up any flat spec fields that might have leaked into formData
+        Object.values(PRODUCT_TYPE_FIELDS).flat().forEach(field => {
+            delete (dataToSubmit as any)[field.key]
+        })
+
+        onSubmit(dataToSubmit)
     }
 
     // Get the spec fields for the currently selected product type
@@ -306,21 +444,31 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
                                     {colors.map((color) => {
                                         const isSelected = formData.colorName === color.name && formData.hexCode === color.hexCode
                                         return (
-                                            <button
-                                                key={color.id}
-                                                type="button"
-                                                title={`${color.name} (${color.hexCode})`}
-                                                onClick={() => handleSelectColor(color)}
-                                                className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none ${isSelected
+                                            <div key={color.id} className="relative group">
+                                                <button
+                                                    key={color.id}
+                                                    type="button"
+                                                    title={`${color.name} (${color.hexCode})`}
+                                                    onClick={() => handleSelectColor(color)}
+                                                    className={`relative w-9 h-9 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none ${isSelected
                                                         ? 'border-indigo-500 ring-2 ring-indigo-300 dark:ring-indigo-700 scale-110'
                                                         : 'border-gray-200 dark:border-dark-4 hover:border-gray-400'
-                                                    }`}
-                                                style={{ backgroundColor: color.hexCode }}
-                                            >
-                                                {isSelected && (
-                                                    <Check className="h-4 w-4 absolute inset-0 m-auto drop-shadow-md" style={{ color: isLightColor(color.hexCode) ? '#1e1e2e' : '#ffffff' }} />
-                                                )}
-                                            </button>
+                                                        }`}
+                                                    style={{ backgroundColor: color.hexCode }}
+                                                >
+                                                    {isSelected && (
+                                                        <Check className="h-4 w-4 absolute inset-0 m-auto drop-shadow-md" style={{ color: isLightColor(color.hexCode) ? '#1e1e2e' : '#ffffff' }} />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => handleDeleteColor(e, color.id)}
+                                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-light-5 hover:bg-dark hover:text-white text-dark rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                                    title="Delete color"
+                                                >
+                                                    <X className="h-2.5 w-2.5 text-red-dark" />
+                                                </button>
+                                            </div>
                                         )
                                     })}
                                     {/* Add custom color button */}
@@ -329,8 +477,8 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
                                         onClick={() => setShowCustomColor(!showCustomColor)}
                                         title="Add custom color"
                                         className={`w-9 h-9 rounded-full border-2 border-dashed transition-all duration-200 hover:scale-110 flex items-center justify-center ${showCustomColor
-                                                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
-                                                : 'border-gray-300 dark:border-dark-4 bg-white dark:bg-dark-2 hover:border-indigo-400'
+                                            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30'
+                                            : 'border-gray-300 dark:border-dark-4 bg-white dark:bg-dark-2 hover:border-indigo-400'
                                             }`}
                                     >
                                         <Plus className={`h-4 w-4 transition-transform duration-200 ${showCustomColor ? 'rotate-45 text-indigo-500' : 'text-gray-400'}`} />
@@ -473,13 +621,13 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
                                         {field.type === 'boolean' ? (
                                             <label className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-dark-2 rounded-xl border border-gray-200 dark:border-dark-4 cursor-pointer hover:border-green-light transition-all">
                                                 <span className="text-xs font-semibold text-dark-2 dark:text-meta-5">
-                                                    {(formData as any)[field.key] ? 'Yes' : 'No'}
+                                                    {!!dynamicFields[field.key] ? 'Yes' : 'No'}
                                                 </span>
                                                 <div className="relative inline-flex items-center cursor-pointer">
                                                     <input
                                                         type="checkbox"
                                                         name={field.key}
-                                                        checked={!!(formData as any)[field.key]}
+                                                        checked={!!dynamicFields[field.key]}
                                                         onChange={handleChange}
                                                         className="sr-only peer"
                                                     />
@@ -490,7 +638,7 @@ function ProductForm({ initialData, onSubmit, onCancel, title, submitLabel, icon
                                             <input
                                                 type={field.type}
                                                 name={field.key}
-                                                value={(formData as any)[field.key] ?? ''}
+                                                value={dynamicFields[field.key] ?? ''}
                                                 onChange={handleChange}
                                                 placeholder={field.placeholder}
                                                 step={field.type === 'number' ? '0.1' : undefined}
@@ -583,3 +731,4 @@ export function EditProductModal({ isOpen, onClose, onUpdate, product }: EditPro
         />
     )
 }
+

@@ -14,6 +14,7 @@ import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
 import { RootState, useAppDispatch, useAppSelector } from "@/redux/store";
 import { useRouter } from "next/navigation";
 import { logout } from "@/redux/slices/authSlice";
+import { clearCart } from "@/redux/slices/cart-slice";
 import { persistor } from "@/redux/store"
 
 
@@ -31,6 +32,7 @@ export function UserInfo() {
   const handleLogout = (e) => {
     e.preventDefault();
     dispatch(logout());
+    dispatch(clearCart());
     persistor.purge();
     router.push("/");
   }

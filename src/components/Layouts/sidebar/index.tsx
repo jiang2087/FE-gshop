@@ -116,7 +116,7 @@ export function Sidebar() {
                                 className={cn(
                                   "ml-auto rotate-180 transition-transform duration-200",
                                   expandedItems.includes(item.title) &&
-                                    "rotate-0",
+                                  "rotate-0",
                                 )}
                                 aria-hidden="true"
                               />
@@ -133,7 +133,14 @@ export function Sidebar() {
                                       as="link"
                                       href={subItem.url}
                                       isActive={pathname === subItem.url}
+                                      className="flex items-center gap-3"
                                     >
+                                      {"icon" in subItem && subItem.icon && (
+                                        <subItem.icon
+                                          className="size-5 shrink-0"
+                                          aria-hidden="true"
+                                        />
+                                      )}
                                       <span>{subItem.title}</span>
                                     </MenuItem>
                                   </li>
@@ -147,7 +154,7 @@ export function Sidebar() {
                               "url" in item
                                 ? item.url + ""
                                 : "/" +
-                                  item.title.toLowerCase().split(" ").join("-");
+                                item.title.toLowerCase().split(" ").join("-");
 
                             return (
                               <MenuItem

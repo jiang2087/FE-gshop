@@ -42,7 +42,7 @@ const Header = () => {
     };
   }, []);
 
- const options = [
+  const options = [
     { label: "All Categories", value: "0" },
     { label: "Laptop", value: "1", type: "LAPTOP" },
     { label: "Phone", value: "2", type: "MOBILE" },
@@ -286,7 +286,7 @@ const Header = () => {
                       cart
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                     $ {totalPrice || 0}
+                      $ {totalPrice.toFixed(2) || 0}
                     </p>
                   </div>
                 </button>

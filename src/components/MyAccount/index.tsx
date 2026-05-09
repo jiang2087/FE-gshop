@@ -6,6 +6,7 @@ import AddressModal from "./AddressModal";
 import Orders from "../Orders";
 import { persistor, useAppDispatch, useAppSelector } from "@/redux/store";
 import { logout } from "@/redux/slices/authSlice";
+import { clearCart } from "@/redux/slices/cart-slice";
 import {
   getAddressesByUser,
   deleteAddress,
@@ -57,6 +58,7 @@ const MyAccount = () => {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(clearCart());
     router.push("/");
     persistor.purge()
   };

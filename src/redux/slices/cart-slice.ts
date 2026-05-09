@@ -1,6 +1,6 @@
-﻿import { createSelector, createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../store";
-import { getCart, getCartTotal, addToCart, updateCartItem, deleteCartItem, clearCart } from "@/api/cartApi";
+import { getCart, getCartTotal, addToCart, updateCartItem, deleteCartItem, clearCart as clearCartApi } from "@/api/cartApi";
 
 type CartItem = {
   cartId: number;
@@ -113,7 +113,7 @@ export const clearCartThunk = createAsyncThunk<
   { rejectValue: string }
 >("cart/clear", async (cartId, { rejectWithValue }) => {
   try {
-    await clearCart(cartId);
+    await clearCartApi(cartId);
   } catch (err: any) {
     const message = err.response?.data?.message || "Xóa giỏ hàng thất bại.";
     return rejectWithValue(message);
@@ -137,6 +137,11 @@ export const cart = createSlice({
   reducers: {
     clearCartError(state) {
       state.error = null;
+    },
+    clearCart(state) {
+      state.items = [];
+      state.cartTotal = 0;
+      state.cartNumber = 0;
     },
   },
   extraReducers: (builder) => {
@@ -163,13 +168,13 @@ export const cart = createSlice({
       })
       .addCase(addToCartThunk.fulfilled, (state, action) => {
         state.loading = false;
-        const existingItem = state.items.find((item) => item.productVariantId === action.payload.productVariantId);
-        if (existingItem) {
-          existingItem.quantity += action.payload.quantity;
+        const index = state.items.findIndex((item) => item.productVariantId === action.payload.productVariantId);
+        if (index !== -1) {
+          state.items[index] = action.payload;
         } else {
           state.items.push(action.payload);
         }
-        state.cartTotal += action.payload.price * action.payload.quantity;
+        state.cartTotal = recalculateCartTotal(state.items);
         state.cartNumber = recalculateCartNumber(state.items);
       })
       .addCase(addToCartThunk.rejected, (state, action) => {
@@ -255,5 +260,5 @@ export const selectCartItems = (state: RootState) => state.cartReducer.items;
 export const selectCartTotal = (state: RootState) => state.cartReducer.cartTotal;
 export const selectCartNumber = (state: RootState) => state.cartReducer.cartNumber;
 
-export const { clearCartError } = cart.actions;
+export const { clearCartError, clearCart } = cart.actions;
 export default cart.reducer;

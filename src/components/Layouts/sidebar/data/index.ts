@@ -19,21 +19,39 @@ export const NAV_DATA = [
         items: [],
       },
       {
-        title: "Profile",
-        url: "/admin/profile",
+        title: "Users",
+        url: "/admin/users",
         icon: Icons.User,
         items: [],
       },
+      // {
+      //   title: "Profile",
+      //   url: "/admin/profile",
+      //   icon: Icons.User,
+      //   items: [],
+      // },
       {
-        title: "Tables",
-        url: "/admin/tables",
+        title: "Sales",
         icon: Icons.Table,
+        url: "/admin/sales",
         items: [
           {
-            title: "Tables",
-            url: "/admin/tables",
+            title: "Discount",
+            icon: Icons.DiscountIcon,
+            url: "/admin/sales/discounts",
           },
+          {
+            title: "Voucher",
+            icon: Icons.VoucherIcon,
+            url: "/admin/sales/vouchers"
+          }
         ],
+      },
+      {
+        title: "Orders",
+        url: "/admin/orders",
+        icon: Icons.OrderIcon,
+        items: [],
       },
       {
         title: "Products",
@@ -45,7 +63,7 @@ export const NAV_DATA = [
       {
         title: "Settings",
         icon: Icons.Alphabet,
-        url: "/admin/pages/settings",
+        url: "/admin/settings",
         items: [],
       },
     ],

@@ -38,7 +38,7 @@ export const columns: ColumnDef<Product>[] = [
                 <div className="flex items-center gap-4 group">
                     <div className="relative">
                         <img
-                            src={product.thumbnail}
+                            src={product.thumbnail || null}
                             alt={product.name}
                             className="w-12 h-12 rounded-xl object-cover shadow-sm transition-transform duration-300 group-hover:scale-110"
                         />

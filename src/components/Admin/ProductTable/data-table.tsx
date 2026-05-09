@@ -23,14 +23,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import { getAllProducts, deleteProduct } from "@/api/adminApi"
+import { getAllProducts, searchProducts, deleteProduct, updateProduct, deleteVariant } from "@/api/adminApi"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
+    keyword?: string
 }
 
 export function DataTable<TData, TValue>({
     columns,
+    keyword,
 }: DataTableProps<TData, TValue>) {
     const [data, setData] = useState<TData[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -59,18 +61,22 @@ export function DataTable<TData, TValue>({
     const fetchProducts = useCallback(async () => {
         setIsLoading(true)
         try {
-            const sortParam = sorting.length > 0 ? {
-                field: sorting[0].id,
-                direction: sorting[0].desc ? 'desc' as const : 'asc' as const
-            } : undefined;
+            let result;
+            if (keyword && keyword.trim() !== "") {
+                result = await searchProducts(keyword, pageIndex, pageSize);
+            } else {
+                const sortParam = sorting.length > 0 ? {
+                    field: sorting[0].id,
+                    direction: sorting[0].desc ? 'desc' as const : 'asc' as const
+                } : undefined;
 
-            const result = await getAllProducts({ 
-                page: pageIndex, 
-                size: pageSize,
-                sort: sortParam
-            })
+                result = await getAllProducts({
+                    page: pageIndex,
+                    size: pageSize,
+                    sort: sortParam
+                })
+            }
             setData(result.content as TData[])
-            console.log("data", result.content)
             setTotalPages(result.page?.totalPages || 0)
             setTotalElements(result.page?.totalElements || 0)
         } catch (error) {
@@ -78,11 +84,21 @@ export function DataTable<TData, TValue>({
         } finally {
             setIsLoading(false)
         }
-    }, [pageIndex, pageSize, sorting])
+    }, [pageIndex, pageSize, sorting, keyword])
 
     useEffect(() => {
         fetchProducts()
     }, [fetchProducts])
+
+    // Keep selectedProduct in sync with the latest data after a refresh
+    useEffect(() => {
+        if (selectedProduct) {
+            const updatedProduct = (data as any[]).find(p => p.id === selectedProduct.id)
+            if (updatedProduct) {
+                setSelectedProduct(updatedProduct)
+            }
+        }
+    }, [data])
 
     const handleDelete = async () => {
         if (!selectedProduct) return
@@ -97,23 +113,18 @@ export function DataTable<TData, TValue>({
         }
     }
 
-    const handleDeleteVariant = (variantId: number) => {
-        // Mock delete functionality for now
-        toast.success("Variant deleted successfully!")
-        // In a real app: await deleteVariant(variantId); fetchProducts();
+    const handleDeleteVariant = async (variantId: number) => {
+        if (!window.confirm("Are you sure you want to delete this variant?")) return
+        try {
+            await deleteVariant(variantId)
+            toast.success("Variant deleted successfully!")
+            fetchProducts() // Refresh the product list which contains variants
+        } catch (error: any) {
+            console.error("Error deleting variant:", error)
+            toast.error(error?.response?.data || "Failed to delete variant")
+        }
     }
 
-    const handleAddVariant = (variantData: any) => {
-        console.log("New variant data:", variantData)
-        // Mock add functionality
-        // fetchProducts();
-    }
-
-    const handleUpdateVariant = (variantData: any) => {
-        console.log("Updated variant data:", variantData)
-        // Mock update functionality
-        // fetchProducts();
-    }
 
     const table = useReactTable({
         data,
@@ -124,7 +135,7 @@ export function DataTable<TData, TValue>({
         state: {
             sorting,
         },
-        manualSorting: true, // Since we're doing server-side sorting
+        manualSorting: true,
         meta: {
             onEdit: (product: any) => {
                 setSelectedProduct(product)
@@ -143,14 +154,18 @@ export function DataTable<TData, TValue>({
 
     const handleUpdateProduct = async (productData: any) => {
         try {
-            console.log("Updating product:", productData)
-            // await updateProduct(selectedProduct.id, productData);
+            if (!selectedProduct) return;
+            const defaultVariantId = selectedProduct?.productVariants.find((v: any) => v.isDefault)?.id || selectedProduct?.productVariants[0]?.id;
+
+            await updateProduct(defaultVariantId, productData);
+
             toast.success("Product updated successfully")
             setIsEditModalOpen(false)
             setSelectedProduct(null)
             fetchProducts()
-        } catch (error) {
-            toast.error("Failed to update product")
+        } catch (error: any) {
+            console.error("Error updating product:", error)
+            toast.error(error?.response?.data || "Failed to update product")
         }
     }
 
@@ -274,9 +289,9 @@ export function DataTable<TData, TValue>({
                     <div className="bg-white dark:bg-dark-3 rounded-xl shadow-xl w-full max-w-md p-6 transform transition-all animate-in zoom-in duration-200">
                         <div className="flex items-center gap-4 text-red-600 mb-4">
                             <div className="bg-red-100 p-3 rounded-full">
-                                <Trash2 className="h-6 w-6" />
+                                <Trash2 className="h-6 w-6 text-red" />
                             </div>
-                            <h3 className="text-xl font-bold">Delete Product</h3>
+                            <h3 className="text-xl text-red-light font-bold">Delete Product</h3>
                         </div>
                         <p className="text-gray-600 dark:text-meta-4 mb-6 font-medium">
                             Are you sure you want to delete <span className="text-dark-2 dark:text-meta-5 font-bold">"{selectedProduct?.name}"</span>?
@@ -285,13 +300,13 @@ export function DataTable<TData, TValue>({
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setIsDeleteModalOpen(false)}
-                                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm font-semibold text-green-dark bg-green-light-6 hover:bg-gray-200 rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleDelete}
-                                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors"
+                                className="px-4 py-2 text-sm font-semibold text-red-dark bg-red-light-5 hover:bg-red-700 rounded-lg shadow-sm transition-colors"
                             >
                                 Delete Product
                             </button>
@@ -354,8 +369,8 @@ export function DataTable<TData, TValue>({
                                         <div className="flex gap-4">
                                             <div className="relative h-20 w-20 flex-shrink-0">
                                                 <img
-                                                    src={variant.image}
-                                                    alt={variant.color.name}
+                                                    src={variant.image || null}
+                                                    alt={variant.color.name || "Product Image"}
                                                     className="h-full w-full rounded-xl object-cover shadow-sm"
                                                 />
                                                 <div
@@ -437,7 +452,8 @@ export function DataTable<TData, TValue>({
                 <AddVariantsModal
                     isOpen={isAddVariantModalOpen}
                     onClose={() => setIsAddVariantModalOpen(false)}
-                    onAdd={handleAddVariant}
+                    onSuccess={fetchProducts}
+                    productId={selectedProduct?.id}
                     productType={selectedProduct?.productType}
                     productName={selectedProduct?.name}
                 />,
@@ -448,7 +464,7 @@ export function DataTable<TData, TValue>({
                 <EditVariantsModal
                     isOpen={isEditVariantModalOpen}
                     onClose={() => setIsEditVariantModalOpen(false)}
-                    onUpdate={handleUpdateVariant}
+                    onSuccess={fetchProducts}
                     variant={selectedVariant}
                     productType={selectedProduct?.productType}
                     productName={selectedProduct?.name}
@@ -458,3 +474,4 @@ export function DataTable<TData, TValue>({
         </div>
     )
 }
+

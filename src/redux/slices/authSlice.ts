@@ -82,6 +82,24 @@ export const register = createAsyncThunk<
   }
 );
 
+export const updateUserInfo = createAsyncThunk<
+  User,
+  { id: number, username: string; email?: string; imageUrl?: string; currentPassword?: string; newPassword?: string },
+  { rejectValue: string }
+>(
+  'auth/updateUserInfo',
+  async ({ id, username, email, imageUrl, currentPassword, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await api.put(`/users/${id}`, { username, email, imageUrl, currentPassword, newPassword });
+      return response.data;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Cập nhật thông tin thất bại.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -138,7 +156,16 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
         state.user = null;
+      })
+      .addCase(updateUserInfo.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload };
+        } else {
+          state.user = action.payload;
+        }
       });
+
+
   },
 });
 

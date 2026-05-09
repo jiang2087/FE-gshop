@@ -7,6 +7,7 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { login } from "@/redux/slices/authSlice";
+import { fetchCart } from "@/redux/slices/cart-slice";
 import { useRef } from "react";
 
 
@@ -43,6 +44,9 @@ const handleSubmit = async (e: React.FormEvent) => {
     const result = await dispatch(login({ username, password })).unwrap();
 
     toast.success("Đăng nhập thành công", { id: toastId });
+    
+    // Load cart after login
+    dispatch(fetchCart(result.id));
 
     if (result.roles.includes("ROLE_ADMIN")) {
       router.push("/admin");

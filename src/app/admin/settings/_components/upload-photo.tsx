@@ -1,14 +1,18 @@
+"use client"
+
 import { UploadIcon } from "@/assets/icons";
 import { ShowcaseSection } from "@/components/Layouts/showcase-section";
+import { useAppSelector } from "@/redux/store";
 import Image from "next/image";
 
 export function UploadPhotoForm() {
+  const { user } = useAppSelector((state) => state.auth);
   return (
     <ShowcaseSection title="Your Photo" className="!p-7">
       <form>
         <div className="mb-4 flex items-center gap-3">
           <Image
-            src="/images/user/user-03.png"
+            src={user?.imageUrl || "/images/user/user-03.png"}
             width={55}
             height={55}
             alt="User"

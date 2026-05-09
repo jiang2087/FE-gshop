@@ -107,7 +107,7 @@ export async function proxy(request: NextRequest) {
   if (!payload) {
     const refreshResult = await tryRefreshAccessToken(request);
     if (!refreshResult.ok) {
-      const signinUrl = new URL("/signin?error=session_expired", request.url);
+      const signinUrl = new URL("/error", request.url);
       signinUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(signinUrl);
     }
@@ -115,7 +115,7 @@ export async function proxy(request: NextRequest) {
     refreshedCookies = refreshResult.setCookies;
     payload = await verifyToken(refreshResult.accessToken);
     if (!payload) {
-      const signinUrl = new URL("/signin?error=session_expired", request.url);
+      const signinUrl = new URL("/error", request.url);
       signinUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(signinUrl);
     }
