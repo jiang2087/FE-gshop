@@ -181,14 +181,14 @@ export const columns: ColumnDef<Product>[] = [
                         className="p-2.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all duration-200 active:scale-90"
                         title="Manage variants"
                     >
-                        <PlusCircle className="h-4.5 w-4.5 text-dark-2 dark:text-meta-5" />
+                        <PlusCircle className="h-4.5 w-4.5 text-green-light dark:text-meta-5" />
                     </button>
                     <button
                         onClick={() => onEdit?.(product)}
                         className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200 active:scale-90"
                         title="Edit product"
                     >
-                        <Edit className="h-4.5 w-4.5 text-dark-2 dark:text-meta-5" />
+                        <Edit className="h-4.5 w-4.5 text-blue-light dark:text-meta-5" />
                     </button>
                     <button
                         onClick={() => onDelete?.(product)}

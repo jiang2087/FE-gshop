@@ -154,7 +154,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
     dispatch(
       addToCartThunk({
         cartKey: cartKey || "",
-        productVariantId: product1.productVariants[previewImg]?.id || defaultVariant.id ,
+        productVariantId: product1.productVariants[previewImg]?.id || defaultVariant.id,
         quantity: 1,
       }),
     )
@@ -166,7 +166,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
   const handleToggleWishlist = (e) => {
     e.preventDefault();
-     dispatch(addItemToWishlist(product1.productVariants?.[previewImg]?.id));
+    dispatch(addItemToWishlist(product1.productVariants?.[previewImg]?.id));
     setLiked(!liked);
   };
 
@@ -191,24 +191,24 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
       setIsHelpful((prev) =>
         response
           ? [
-              ...prev.filter((n) => n.id !== reviewId),
-              { id: reviewId, helpful: true },
-            ]
+            ...prev.filter((n) => n.id !== reviewId),
+            { id: reviewId, helpful: true },
+          ]
           : prev.filter((n) => n.id !== reviewId),
       );
 
       setReviews(
         response
           ? reviews.map((r) =>
-              r.id === reviewId
-                ? { ...r, helpfulCount: r.helpfulCount + 1 }
-                : r,
-            )
+            r.id === reviewId
+              ? { ...r, helpfulCount: r.helpfulCount + 1 }
+              : r,
+          )
           : reviews.map((r) =>
-              r.id === reviewId
-                ? { ...r, helpfulCount: r.helpfulCount - 1 }
-                : r,
-            ),
+            r.id === reviewId
+              ? { ...r, helpfulCount: r.helpfulCount - 1 }
+              : r,
+          ),
       );
     } catch (error) {
       console.error("Error updating helpful count:", error);
@@ -347,11 +347,10 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                       <button
                         onClick={() => setPreviewImg(key)}
                         key={key}
-                        className={`flex items-center justify-center w-15 sm:w-25 h-15 sm:h-25 overflow-hidden rounded-lg bg-gray-2 shadow-1 ease-out duration-200 border-2 hover:border-blue ${
-                          key === previewImg
+                        className={`flex items-center justify-center w-15 sm:w-25 h-15 sm:h-25 overflow-hidden rounded-lg bg-gray-2 shadow-1 ease-out duration-200 border-2 hover:border-blue ${key === previewImg
                             ? "border-blue"
                             : "border-transparent"
-                        }`}
+                          }`}
                       >
                         <Image
                           width={50}
@@ -491,7 +490,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
                     <div className="flex items-center gap-1.5">
                       {product1?.productVariants[previewImg]?.stockQuantity >
-                      0 ? (
+                        0 ? (
                         <>
                           {/* In Stock */}
                           <div className="flex items-center gap-1.5">
@@ -595,27 +594,6 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                       Free delivery available
                     </li>
 
-                    <li className="flex items-center gap-2.5">
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M13.3589 8.35863C13.603 8.11455 13.603 7.71882 13.3589 7.47475C13.1149 7.23067 12.7191 7.23067 12.4751 7.47475L8.75033 11.1995L7.5256 9.97474C7.28152 9.73067 6.8858 9.73067 6.64172 9.97474C6.39764 10.2188 6.39764 10.6146 6.64172 10.8586L8.30838 12.5253C8.55246 12.7694 8.94819 12.7694 9.19227 12.5253L13.3589 8.35863Z"
-                          fill="#3C50E0"
-                        />
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M10.0003 1.04169C5.05277 1.04169 1.04199 5.05247 1.04199 10C1.04199 14.9476 5.05277 18.9584 10.0003 18.9584C14.9479 18.9584 18.9587 14.9476 18.9587 10C18.9587 5.05247 14.9479 1.04169 10.0003 1.04169ZM2.29199 10C2.29199 5.74283 5.74313 2.29169 10.0003 2.29169C14.2575 2.29169 17.7087 5.74283 17.7087 10C17.7087 14.2572 14.2575 17.7084 10.0003 17.7084C5.74313 17.7084 2.29199 14.2572 2.29199 10Z"
-                          fill="#3C50E0"
-                        />
-                      </svg>
-                      Sales 30% Off Use Code: PROMO30
-                    </li>
                   </ul>
 
                   <form>
@@ -652,11 +630,10 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
                                 {/* Circle */}
                                 <div
-                                  className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center ${
-                                    activeColor === color
+                                  className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center ${activeColor === color
                                       ? "ring-2 ring-black"
                                       : ""
-                                  }`}
+                                    }`}
                                   style={{
                                     borderColor: isWhite ? "#000" : color,
                                   }}
@@ -787,11 +764,10 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                   <button
                     key={key}
                     onClick={() => setActiveTab(item.id)}
-                    className={`font-medium lg:text-lg ease-out duration-200 hover:text-blue relative before:h-0.5 before:bg-blue before:absolute before:left-0 before:bottom-0 before:ease-out before:duration-200 hover:before:w-full ${
-                      activeTab === item.id
+                    className={`font-medium lg:text-lg ease-out duration-200 hover:text-blue relative before:h-0.5 before:bg-blue before:absolute before:left-0 before:bottom-0 before:ease-out before:duration-200 hover:before:w-full ${activeTab === item.id
                         ? "text-blue before:w-full"
                         : "text-dark before:w-0"
-                    }`}
+                      }`}
                   >
                     {item.title}
                   </button>
@@ -803,9 +779,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
               {/* <!-- tab content one start --> */}
               <div>
                 <div
-                  className={`flex-col sm:flex-row gap-7.5 xl:gap-12.5 mt-12.5 ${
-                    activeTab === "tabOne" ? "flex" : "hidden"
-                  }`}
+                  className={`flex-col sm:flex-row gap-7.5 xl:gap-12.5 mt-12.5 ${activeTab === "tabOne" ? "flex" : "hidden"
+                    }`}
                 >
                   <div className="max-w-[670px] w-full">
                     <h2 className="font-medium text-2xl text-dark mb-7">
@@ -858,9 +833,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
               {/* <!-- tab content two start --> */}
               <div>
                 <div
-                  className={`rounded-xl bg-white shadow-1 p-4 sm:p-6 mt-10 ${
-                    activeTab === "tabTwo" ? "block" : "hidden"
-                  }`}
+                  className={`rounded-xl bg-white shadow-1 p-4 sm:p-6 mt-10 ${activeTab === "tabTwo" ? "block" : "hidden"
+                    }`}
                 >
                   {additionalInfo?.map((item, key) => (
                     <div
@@ -886,9 +860,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
               {/* <!-- tab content three start --> */}
               <div>
                 <div
-                  className={`flex-col sm:flex-row gap-7.5 xl:gap-12.5 mt-12.5 ${
-                    activeTab === "tabThree" ? "flex" : "hidden"
-                  }`}
+                  className={`flex-col sm:flex-row gap-7.5 xl:gap-12.5 mt-12.5 ${activeTab === "tabThree" ? "flex" : "hidden"
+                    }`}
                 >
                   <div className="max-w-[570px] w-full">
                     <h2 className="font-medium text-2xl text-dark mb-9">
@@ -923,12 +896,12 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                                 <p className="text-custom-sm">
                                   {review?.createdAt
                                     ? new Date(
-                                        review.createdAt,
-                                      ).toLocaleDateString("en-US", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                      })
+                                      review.createdAt,
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    })
                                     : ""}
                                 </p>
                               </div>
@@ -938,11 +911,10 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                               {[...Array(5)].map((_, index) => (
                                 <span
                                   key={index}
-                                  className={`cursor-pointer ${
-                                    index < review?.rating
+                                  className={`cursor-pointer ${index < review?.rating
                                       ? "text-[#FBB040]"
                                       : "text-gray-5"
-                                  }`}
+                                    }`}
                                 >
                                   <svg
                                     className="fill-current"
@@ -1003,9 +975,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                                     rating: star,
                                   }))
                                 }
-                                className={`cursor-pointer transition duration-200 ${
-                                  isActive ? "text-[#FBB040]" : "text-gray-5"
-                                } hover:scale-110`}
+                                className={`cursor-pointer transition duration-200 ${isActive ? "text-[#FBB040]" : "text-gray-5"
+                                  } hover:scale-110`}
                               >
                                 <svg
                                   className="fill-current"
@@ -1049,11 +1020,10 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                               Maximum
                             </span>
                             <span
-                              className={`text-sm ${
-                                review.comment.length >= 200
+                              className={`text-sm ${review.comment.length >= 200
                                   ? "text-red-light"
                                   : "text-gray-5"
-                              }`}
+                                }`}
                             >
                               {review?.comment.length}/250
                             </span>

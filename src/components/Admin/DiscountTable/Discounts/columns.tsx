@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
-import { Tag, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Calendar, CheckCircle2, XCircle } from "lucide-react"
+import { Tag, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Calendar, CheckCircle2, XCircle, PackagePlus } from "lucide-react"
 import { DiscountAdminResponse } from "@/api/adminApi"
 
 export const columns: ColumnDef<DiscountAdminResponse>[] = [
@@ -106,10 +106,17 @@ export const columns: ColumnDef<DiscountAdminResponse>[] = [
         header: () => <div className="text-center">Actions</div>,
         cell: ({ row, table }) => {
             const discount = row.original
-            const { onEdit, onDelete } = table.options.meta as any
+            const { onEdit, onDelete, onAddProduct } = table.options.meta as any
 
             return (
                 <div className="flex gap-2 justify-center">
+                    <button
+                        onClick={() => onAddProduct?.(discount)}
+                        className="p-2 text-slate-400 hover:text-green hover:bg-green/10 dark:hover:bg-dark-3 rounded-xl transition-all"
+                        title="Thêm sản phẩm"
+                    >
+                        <PackagePlus className="h-5 w-5 text-green" />
+                    </button>
                     <button
                         onClick={() => onEdit?.(discount)}
                         className="p-2 text-slate-400 hover:text-blue hover:bg-blue-light-5 dark:hover:bg-dark-3 rounded-xl transition-all"

@@ -96,6 +96,100 @@ export const getAllProducts = async (params?: PaginationParams) => {
     return response.data;
 };
 
+export const getAllVariants = async (params?: PaginationParams) => {
+    const sort =
+        typeof params?.sort === "string"
+            ? params.sort
+            : params?.sort
+                ? `${params.sort.field},${params.sort.direction}`
+                : undefined;
+
+    const response = await api.get("/products/variants", {
+        params: {
+            page: params?.page ?? 0,
+            size: params?.size ?? 10,
+            ...(sort ? { sort } : {}),
+        },
+    });
+
+    return response.data;
+};
+
+export const getVariantsNotInDiscount = async (
+    discountId: number,
+    params?: PaginationParams
+) => {
+
+    const sort =
+        typeof params?.sort === "string"
+            ? params.sort
+            : params?.sort
+                ? `${params.sort.field},${params.sort.direction}`
+                : undefined;
+
+    const response = await api.get(`/discounts/${discountId}/variants`, {
+        params: {
+            page: params?.page ?? 0,
+            size: params?.size ?? 10,
+            sku: params?.keyword,
+            ...(sort ? { sort } : {}),
+        },
+    });
+
+    return response.data;
+};
+export const getVariantsInDiscount = async (
+    discountId: number,
+    params?: PaginationParams
+) => {
+
+    const sort =
+        typeof params?.sort === "string"
+            ? params.sort
+            : params?.sort
+                ? `${params.sort.field},${params.sort.direction}`
+                : undefined;
+
+    const response = await api.get(`/discounts/${discountId}/variants/in`, {
+        params: {
+            page: params?.page ?? 0,
+            size: params?.size ?? 10,
+            sku: params?.keyword,
+            ...(sort ? { sort } : {}),
+        },
+    });
+
+    return response.data;
+};
+
+
+export const addVariantDiscount = async (
+    discountId: number,
+    productVariantIds: number[]
+) => {
+
+    const response = await api.post(
+        `/discounts/${discountId}/variants`,
+        productVariantIds
+    );
+
+    return response.data;
+};
+export const removeVariantDiscount = async (
+    discountId: number,
+    productVariantId: number
+) => {
+
+    const response = await api.delete(
+        `/discounts/${discountId}/variants/${productVariantId}`,
+    );
+
+    return response.data;
+};
+
+
+
+// Products
 export const searchProducts = async (keyword?: string, page: number = 0, size: number = 10) => {
     try {
         const response = await api.get("/products/search", {
@@ -446,6 +540,93 @@ export const deleteVoucher = async (id: number) => {
         return response.data;
     } catch (error) {
         console.error("Error deleting voucher:", error);
+        throw error;
+    }
+};
+
+// User Admin Management
+export interface UserAdminResponse {
+    id: number;
+    username: string;
+    email: string;
+    imageUrl: string;
+    status: string;
+}
+
+export const getAllUsersAdmin = async (params?: PaginationParams) => {
+    const sort =
+        typeof params?.sort === "string"
+            ? params.sort
+            : params?.sort
+                ? `${params.sort.field},${params.sort.direction}`
+                : undefined;
+
+    const response = await api.get("/users", {
+        params: {
+            keyword: params?.keyword,
+            status: params?.status,
+
+            page: params?.page ?? 0,
+            size: params?.size ?? 5,
+            ...(sort ? { sort } : {}),
+        },
+    });
+
+    return response.data;
+};
+
+export const updateUserStatusAdmin = async (userId: number, status: string) => {
+    try {
+        const response = await api.put(`/users/${userId}/status`, null, {
+            params: { status }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error updating user status:", error);
+        throw error;
+    }
+};
+
+export interface TopUserResponse {
+    userId: number;
+    username: string;
+    email: string;
+    totalPurchased: number;
+    lastPurchase: string;
+}
+
+export const getTopPurchasers = async (params?: PaginationParams) => {
+    try {
+        const response = await api.get("/users/top-purchasers", {
+            params: {
+                page: params?.page ?? 0,
+                size: params?.size ?? 5,
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching top purchasers:", error);
+        throw error;
+    }
+};
+
+export interface OrderAdminResponse {
+    id: number;
+    orderCode: string;
+    customerName: string;
+    phone: string;
+    totalPrice: number;
+    paymentMethod: string;
+    status: OrderStatus;
+    createdAt: string;
+}
+
+export const getOrdersByUserIdAdmin = async (userId: number) => {
+    try {
+        const response = await api.get(`/orders/user/${userId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching user orders:", error);
         throw error;
     }
 };

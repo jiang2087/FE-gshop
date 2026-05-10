@@ -9,16 +9,9 @@ import {
     SortingState,
     useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Tag } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Users, X, ShieldAlert } from "lucide-react"
 import { toast } from "react-hot-toast"
-import {
-    getAllDiscounts,
-    DiscountAdminResponse,
-    DiscountRequest,
-    createDiscount,
-    updateDiscount,
-    deleteDiscount,
-} from "@/api/adminApi"
+import { getAllUsersAdmin, updateUserStatusAdmin, UserAdminResponse } from "@/api/adminApi"
 
 import {
     Table,
@@ -29,24 +22,18 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-import DiscountFormModal from "./DiscountFormModal"
-import ConfirmDeleteModal from "../ConfirmDeleteModal"
-import ViewDiscountVariantsModal from "./ViewDiscountVariantsModal"
-
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
-    addModalOpen?: boolean
-    setAddModalOpen?: (open: boolean) => void
-    searchKeyword?: string
     status?: string
+    keyword?: string
 }
 
-export function DiscountDataTable<TData, TValue>({
+const validStatuses = ["ACTIVE", "BLOCKED", "INACTIVE"];
+
+export function UserTable<TData, TValue>({
     columns,
-    addModalOpen,
-    setAddModalOpen,
-    searchKeyword = "",
     status,
+    keyword
 }: DataTableProps<TData, TValue>) {
     const [data, setData] = useState<TData[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -59,28 +46,11 @@ export function DiscountDataTable<TData, TValue>({
     const [sorting, setSorting] = useState<SortingState>([])
 
     // Modal state
-    const [editingDiscount, setEditingDiscount] = useState<DiscountAdminResponse | null>(null)
-    const [internalEditOpen, setInternalEditOpen] = useState(false)
-    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<UserAdminResponse | null>(null)
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+    const [pendingStatus, setPendingStatus] = useState<string | null>(null)
 
-    const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-    const [deletingDiscount, setDeletingDiscount] = useState<DiscountAdminResponse | null>(null)
-    const [isDeleting, setIsDeleting] = useState(false)
-
-    // Variants Modal state
-    const [isVariantsModalOpen, setIsVariantsModalOpen] = useState(false)
-    const [selectedDiscountForVariants, setSelectedDiscountForVariants] = useState<DiscountAdminResponse | null>(null)
-
-    // Form modal is open if parent triggered add OR internal edit is triggered
-    const isFormOpen = (addModalOpen ?? false) || internalEditOpen
-
-    const closeFormModal = () => {
-        setAddModalOpen?.(false)
-        setInternalEditOpen(false)
-        setEditingDiscount(null)
-    }
-
-    const fetchDiscounts = useCallback(async () => {
+    const fetchUsers = useCallback(async () => {
         setIsLoading(true)
         try {
             const sortParam = sorting.length > 0 ? {
@@ -88,81 +58,43 @@ export function DiscountDataTable<TData, TValue>({
                 direction: sorting[0].desc ? 'desc' as const : 'asc' as const
             } : undefined;
 
-            const result = await getAllDiscounts({
+            const result = await getAllUsersAdmin({
                 page: pageIndex,
                 size: pageSize,
                 sort: sortParam,
-                keyword: searchKeyword,
-                status: status,
+                status,
+                keyword
             })
 
             setData(result.content as TData[])
             setTotalPages(result.page?.totalPages || 0)
             setTotalElements(result.page?.totalElements || 0)
         } catch (error) {
-            console.error("Error loading discounts:", error)
-            toast.error("Failed to load discounts")
+            console.error("Error loading users:", error)
+            toast.error("Failed to load users")
         } finally {
             setIsLoading(false)
         }
-    }, [pageIndex, pageSize, sorting, searchKeyword, status])
+    }, [pageIndex, pageSize, sorting, status, keyword])
 
     useEffect(() => {
         setPageIndex(0)
-    }, [searchKeyword, status])
+    }, [keyword, status])
 
     useEffect(() => {
-        fetchDiscounts()
-    }, [fetchDiscounts])
+        fetchUsers()
+    }, [fetchUsers])
 
-    // Handlers
-    const handleOpenEdit = (discount: DiscountAdminResponse) => {
-        setEditingDiscount(discount)
-        setInternalEditOpen(true)
-    }
-
-    const handleOpenDelete = (discount: DiscountAdminResponse) => {
-        setDeletingDiscount(discount)
-        setIsDeleteOpen(true)
-    }
-
-    const handleOpenVariants = (discount: DiscountAdminResponse) => {
-        setSelectedDiscountForVariants(discount)
-        setIsVariantsModalOpen(true)
-    }
-
-    const handleFormSubmit = async (formData: DiscountRequest) => {
-        setIsSubmitting(true)
+    const handleUpdateStatus = async (newStatus: string) => {
+        if (!selectedUser) return
         try {
-            if (editingDiscount) {
-                await updateDiscount(editingDiscount.id, formData)
-                toast.success(`Discount "${formData.name}" updated successfully`)
-            } else {
-                await createDiscount(formData)
-                toast.success(`Discount "${formData.name}" created successfully`)
-            }
-            closeFormModal()
-            fetchDiscounts()
+            await updateUserStatusAdmin(selectedUser.id, newStatus)
+            setIsStatusModalOpen(false)
+            setSelectedUser(null)
+            toast.success(`User status updated to ${newStatus}`)
+            fetchUsers()
         } catch (error) {
-            toast.error(editingDiscount ? "Failed to update discount" : "Failed to create discount")
-        } finally {
-            setIsSubmitting(false)
-        }
-    }
-
-    const handleDeleteConfirm = async () => {
-        if (!deletingDiscount) return
-        setIsDeleting(true)
-        try {
-            await deleteDiscount(deletingDiscount.id)
-            toast.success(`Discount "${deletingDiscount.name}" deleted successfully`)
-            setIsDeleteOpen(false)
-            setDeletingDiscount(null)
-            fetchDiscounts()
-        } catch (error) {
-            toast.error("Failed to delete discount")
-        } finally {
-            setIsDeleting(false)
+            toast.error("Failed to update user status")
         }
     }
 
@@ -177,17 +109,10 @@ export function DiscountDataTable<TData, TValue>({
         },
         manualSorting: true,
         meta: {
-            onEdit: (discount: DiscountAdminResponse) => {
-                handleOpenEdit(discount)
-            },
-            onDelete: (discount: DiscountAdminResponse) => {
-                handleOpenDelete(discount)
-            },
-            onAddProduct: (discount: DiscountAdminResponse) => {
-                handleOpenVariants(discount)
-            },
-            onAdd: () => {
-                setAddModalOpen?.(true)
+            onUpdateStatus: (user: UserAdminResponse) => {
+                setSelectedUser(user)
+                setPendingStatus(user.status)
+                setIsStatusModalOpen(true)
             },
         },
     })
@@ -218,7 +143,7 @@ export function DiscountDataTable<TData, TValue>({
                                 <TableCell colSpan={columns.length} className="h-32 text-center">
                                     <div className="flex flex-col items-center justify-center gap-3">
                                         <div className="w-8 h-8 border-3 border-blue dark:border-meta-5 border-t-transparent rounded-full animate-spin"></div>
-                                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading discounts...</span>
+                                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading users...</span>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -239,8 +164,8 @@ export function DiscountDataTable<TData, TValue>({
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-32 text-center">
                                     <div className="flex flex-col items-center justify-center gap-2 opacity-40">
-                                        <Tag className="h-10 w-10 text-teal" />
-                                        <span className="text-sm font-bold text-dark dark:text-meta-5">No discounts found.</span>
+                                        <Users className="h-10 w-10 text-slate-400" />
+                                        <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">No users found.</span>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -251,7 +176,7 @@ export function DiscountDataTable<TData, TValue>({
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-2">
                 <div className="text-sm font-bold text-slate-500 dark:text-meta-5">
-                    Showing <span className="text-blue dark:text-blue-light">{data.length}</span> of <span className="text-dark-2 dark:text-meta-5">{totalElements}</span> discounts
+                    Showing <span className="text-blue dark:text-blue-light">{data.length}</span> of <span className="text-dark-2 dark:text-meta-5">{totalElements}</span> users
                 </div>
 
                 <div className="flex items-center gap-6">
@@ -313,35 +238,67 @@ export function DiscountDataTable<TData, TValue>({
                 </div>
             </div>
 
-            {/* Modals */}
-            <DiscountFormModal
-                isOpen={isFormOpen}
-                onClose={closeFormModal}
-                onSubmit={handleFormSubmit}
-                discount={editingDiscount}
-                isSubmitting={isSubmitting}
-            />
+            {/* Status Update Modal */}
+            {isStatusModalOpen && (
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-dark-6/60 backdrop-blur-sm animate-in fade-in duration-300"
+                    onClick={(e) => e.target === e.currentTarget && setIsStatusModalOpen(false)}
+                >
+                    <div className="bg-white dark:bg-gray-dark rounded-2xl shadow-2xl w-full max-w-md mx-4 transform transition-all animate-in zoom-in duration-200">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-7 py-5 border-b border-stroke dark:border-stroke-dark">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2.5 bg-red-light-6 dark:bg-red/10 rounded-xl">
+                                    <ShieldAlert className="h-6 w-6 text-red" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-dark-2 dark:text-white tracking-tight">
+                                        Update User Status
+                                    </h3>
+                                    <p className="text-sm text-slate-400 font-medium mt-0.5">
+                                        User <span className="text-blue font-bold">{selectedUser?.username}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsStatusModalOpen(false)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-dark-2 dark:hover:text-white hover:bg-gray-2 dark:hover:bg-dark-3 transition-all"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
 
-            <ConfirmDeleteModal
-                isOpen={isDeleteOpen}
-                onClose={() => {
-                    setIsDeleteOpen(false)
-                    setDeletingDiscount(null)
-                }}
-                onConfirm={handleDeleteConfirm}
-                isDeleting={isDeleting}
-                title="Delete Discount"
-                description={`Are you sure you want to delete the discount "${deletingDiscount?.name}"? This will remove it permanently from your store.`}
-            />
+                        {/* Content */}
+                        <div className="p-7">
+                            <div className="grid grid-cols-1 gap-3">
+                                {validStatuses.map((status) => (
+                                    <button
+                                        key={status}
+                                        onClick={() => setPendingStatus(status)}
+                                        className={`py-3.5 px-5 rounded-xl font-bold text-sm transition-all border-2 flex items-center justify-between group ${pendingStatus === status
+                                            ? "border-blue bg-blue-light-5 text-blue dark:bg-blue-dark/20"
+                                            : "border-transparent bg-gray-1 dark:bg-dark-2 text-slate-500 hover:bg-gray-2 dark:hover:bg-dark-3 hover:border-slate-200 dark:hover:border-dark-4"
+                                            }`}
+                                    >
+                                        <span>{status}</span>
+                                        {pendingStatus === status && (
+                                            <div className="w-2 h-2 rounded-full bg-blue animate-pulse"></div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
 
-            <ViewDiscountVariantsModal
-                isOpen={isVariantsModalOpen}
-                onClose={() => {
-                    setIsVariantsModalOpen(false)
-                    setSelectedDiscountForVariants(null)
-                }}
-                discount={selectedDiscountForVariants}
-            />
+                            <button
+                                onClick={() => pendingStatus && handleUpdateStatus(pendingStatus) && setIsStatusModalOpen(false)}
+                                disabled={!pendingStatus || pendingStatus === selectedUser?.status}
+                                className="w-full mt-8 py-4 px-6 rounded-xl font-bold text-white bg-blue hover:bg-blue-dark shadow-lg shadow-blue-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                            >
+                                Update Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

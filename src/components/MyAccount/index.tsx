@@ -13,13 +13,14 @@ import {
   Address,
 } from "@/redux/slices/addressSlice";
 import { useRouter } from "next/navigation";
+import { getMyOrders, Order } from "@/api/orderApi";
 
 const MyAccount = () => {
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [addressModal, setAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-  const [username, setUsername] = useState("");
+  const [userData, setUserData] = useState({ username: "", email: "" });
 
   const openAddressModal = (address: Address | null = null) => {
     setEditingAddress(address);
@@ -30,11 +31,14 @@ const MyAccount = () => {
   const isAuthenticated = useAppSelector(
     (state: any) => state.auth.isAuthenticated,
   );
-  const orders = useAppSelector((state) => state?.cartReducer.items);
+  const cartItems = useAppSelector((state) => state?.cartReducer.items);
   const addresses = useAppSelector((state) => state.address.addresses);
   const addressLoading = useAppSelector((state) => state.address.loading);
   const dispatch = useAppDispatch();
   const router = useRouter();
+
+  const [userOrders, setUserOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -42,16 +46,52 @@ const MyAccount = () => {
     }
   }, [isAuthenticated, router]);
 
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const data = await getMyOrders();
+      setUserOrders(data);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getAddressesByUser(user?.id)).catch(() => {
         // Silently handle — API may not exist yet
       });
+
+      fetchOrders();
     }
   }, [activeTab, isAuthenticated, dispatch, user?.id]);
 
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-light";
+
+      case "PROCESSING":
+        return "bg-blue-100 text-blue-light";
+
+      case "SHIPPED":
+        return "bg-purple-100 text-purple-700";
+
+      case "COMPLETED":
+        return "bg-green-100 text-green-light";
+
+      case "CANCELLED":
+        return "bg-red-100 text-red-light";
+
+      default:
+        return "bg-gray-100 text-gray-2";
+    }
+  };
+
   const handleDeleteAddress = (id: number) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa địa chỉ này?")) {
+    if (window.confirm("Are you sure you want to delete this address?")) {
       dispatch(deleteAddress({ userId: user.id, addressId: id }));
     }
   };
@@ -99,11 +139,10 @@ const MyAccount = () => {
                   <div className="flex flex-wrap xl:flex-nowrap xl:flex-col gap-4">
                     <button
                       onClick={() => setActiveTab("dashboard")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "dashboard"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "dashboard"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -142,11 +181,10 @@ const MyAccount = () => {
                     </button>
                     <button
                       onClick={() => setActiveTab("orders")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "orders"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "orders"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -180,11 +218,10 @@ const MyAccount = () => {
 
                     <button
                       onClick={() => setActiveTab("downloads")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "downloads"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "downloads"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -208,11 +245,10 @@ const MyAccount = () => {
 
                     <button
                       onClick={() => setActiveTab("addresses")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "addresses"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "addresses"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -238,11 +274,10 @@ const MyAccount = () => {
 
                     <button
                       onClick={() => setActiveTab("account-details")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "account-details"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "account-details"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -270,11 +305,10 @@ const MyAccount = () => {
 
                     <button
                       onClick={handleLogout}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${
-                        activeTab === "logout"
-                          ? "text-white bg-blue"
-                          : "text-dark-2 bg-gray-1"
-                      }`}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "logout"
+                        ? "text-white bg-blue"
+                        : "text-dark-2 bg-gray-1"
+                        }`}
                     >
                       <svg
                         className="fill-current"
@@ -306,9 +340,8 @@ const MyAccount = () => {
             {/* <!-- dashboard tab content start --> */}
 
             <div
-              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${
-                activeTab === "dashboard" ? "block" : "hidden"
-              }`}
+              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${activeTab === "dashboard" ? "block" : "hidden"
+                }`}
             >
               <div className="max-w-6xl mx-auto p-6">
                 <h1 className="text-2xl text-dark-2 font-bold mb-6">
@@ -333,24 +366,26 @@ const MyAccount = () => {
                       Recent Orders
                     </h2>
 
-                    {orders?.length === 0 && (
+                    {userOrders?.length === 0 && !ordersLoading && (
                       <p className="text-dark-2">You have no recent orders.</p>
                     )}
 
+                    {ordersLoading && <p className="text-dark-2">Loading orders...</p>}
+
                     <div className="space-y-4">
-                      {orders?.slice(0, 3).map((order: any, index: number) => (
+                      {userOrders?.slice(0, 3).map((order: Order, index: number) => (
                         <div
                           key={index}
                           className="flex justify-between border-b pb-2"
                         >
                           <div>
-                            <p className="font-medium">Order #{order.id}</p>
-                            <p className="text-sm text-gray-500">
+                            <p className="font-medium">Order #{order.orderCode}</p>
+                            <p className={`text-sm text-gray-500 uppercase ${getStatusStyle(order.status)}`}>
                               {order.status}
                             </p>
                           </div>
 
-                          <p className="font-semibold">${order.total}</p>
+                          <p className="font-semibold">${order.totalPrice}</p>
                         </div>
                       ))}
                     </div>
@@ -452,19 +487,17 @@ const MyAccount = () => {
 
           <!-- orders tab content start --> */}
             <div
-              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 ${
-                activeTab === "orders" ? "block" : "hidden"
-              }`}
+              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 ${activeTab === "orders" ? "block" : "hidden"
+                }`}
             >
-              <Orders />
+              <Orders orders={userOrders} loading={ordersLoading} refreshOrders={fetchOrders} />
             </div>
             {/* <!-- orders tab content end -->
 
           <!-- downloads tab content start --> */}
             <div
-              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${
-                activeTab === "downloads" ? "block" : "hidden"
-              }`}
+              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${activeTab === "downloads" ? "block" : "hidden"
+                }`}
             >
               <p>You don&apos;t have any download</p>
             </div>
@@ -472,9 +505,8 @@ const MyAccount = () => {
 
           <!-- addresses tab content start --> */}
             <div
-              className={`xl:max-w-[770px] w-full gap-7.5 ${
-                activeTab === "addresses" ? "block" : "hidden"
-              }`}
+              className={`xl:max-w-[770px] w-full gap-7.5 ${activeTab === "addresses" ? "block" : "hidden"
+                }`}
             >
               {/* Addresses */}
               <div className="w-full bg-white shadow-1 rounded-xl">
@@ -587,9 +619,8 @@ const MyAccount = () => {
 
           <!-- details tab content start --> */}
             <div
-              className={`xl:max-w-[770px] w-full ${
-                activeTab === "account-details" ? "block" : "hidden"
-              }`}
+              className={`xl:max-w-[770px] w-full ${activeTab === "account-details" ? "block" : "hidden"
+                }`}
             >
               <form>
                 <div className="bg-white shadow-1 rounded-xl p-4 sm:p-8.5">
@@ -600,12 +631,27 @@ const MyAccount = () => {
                       </label>
 
                       <input
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e) => setUserData({ ...userData, username: e.target.value })}
                         type="text"
                         name="username"
                         id="username"
                         placeholder="Username"
-                        value={username}
+                        value={userData.username || user?.username}
+                        className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      />
+                    </div>
+                    <div className="w-full">
+                      <label htmlFor="email" className="block mb-2.5">
+                        Email <span className="text-red">*</span>
+                      </label>
+
+                      <input
+                        onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                        type="text"
+                        name="email"
+                        id="email"
+                        placeholder="Email"
+                        value={userData.email || user?.email}
                         className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                       />
                     </div>
@@ -621,7 +667,7 @@ const MyAccount = () => {
 
                 <p className="text-custom-sm mt-5 mb-9">
                   This will be how your name will be displayed in the account
-                  section and in reviews
+                  section
                 </p>
 
                 <p className="font-medium text-xl sm:text-2xl text-dark mb-7">
