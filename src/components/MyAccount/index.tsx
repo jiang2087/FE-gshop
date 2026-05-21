@@ -14,6 +14,8 @@ import {
 } from "@/redux/slices/addressSlice";
 import { useRouter } from "next/navigation";
 import { getMyOrders, Order } from "@/api/orderApi";
+import { getUserUsableVouchers, UserVoucherResponse } from "@/api/discountApi";
+import { toast } from "react-hot-toast";
 
 const MyAccount = () => {
 
@@ -31,7 +33,6 @@ const MyAccount = () => {
   const isAuthenticated = useAppSelector(
     (state: any) => state.auth.isAuthenticated,
   );
-  const cartItems = useAppSelector((state) => state?.cartReducer.items);
   const addresses = useAppSelector((state) => state.address.addresses);
   const addressLoading = useAppSelector((state) => state.address.loading);
   const dispatch = useAppDispatch();
@@ -39,6 +40,8 @@ const MyAccount = () => {
 
   const [userOrders, setUserOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [vouchers, setVouchers] = useState<UserVoucherResponse[]>([]);
+  const [vouchersLoading, setVouchersLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,6 +61,19 @@ const MyAccount = () => {
     }
   };
 
+  const fetchVouchers = async () => {
+    if (!user?.id) return;
+    setVouchersLoading(true);
+    try {
+      const data = await getUserUsableVouchers(user.id);
+      setVouchers(data);
+    } catch (error) {
+      console.error("Failed to fetch vouchers:", error);
+    } finally {
+      setVouchersLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getAddressesByUser(user?.id)).catch(() => {
@@ -65,6 +81,7 @@ const MyAccount = () => {
       });
 
       fetchOrders();
+      fetchVouchers();
     }
   }, [activeTab, isAuthenticated, dispatch, user?.id]);
 
@@ -217,8 +234,8 @@ const MyAccount = () => {
                     </button>
 
                     <button
-                      onClick={() => setActiveTab("downloads")}
-                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "downloads"
+                      onClick={() => setActiveTab("vouchers")}
+                      className={`flex items-center rounded-md gap-2.5 py-3 px-4.5 ease-out duration-200 hover:bg-blue hover:text-white ${activeTab === "vouchers"
                         ? "text-white bg-blue"
                         : "text-dark-2 bg-gray-1"
                         }`}
@@ -240,7 +257,7 @@ const MyAccount = () => {
                           fill=""
                         />
                       </svg>
-                      Downloads
+                      Vouchers
                     </button>
 
                     <button
@@ -494,14 +511,98 @@ const MyAccount = () => {
             </div>
             {/* <!-- orders tab content end -->
 
-          <!-- downloads tab content start --> */}
+          <!-- vouchers tab content start --> */}
             <div
-              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${activeTab === "downloads" ? "block" : "hidden"
+              className={`xl:max-w-[770px] w-full bg-white rounded-xl shadow-1 py-9.5 px-4 sm:px-7.5 xl:px-10 ${activeTab === "vouchers" ? "block" : "hidden"
                 }`}
             >
-              <p>You don&apos;t have any download</p>
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between border-b border-gray-3 pb-5">
+                  <h2 className="text-xl font-semibold text-dark">My Vouchers</h2>
+                  <span className="bg-blue/10 text-blue px-3 py-1 rounded-full text-sm font-medium">
+                    {vouchers.length} Available
+                  </span>
+                </div>
+
+                {vouchersLoading ? (
+                  <div className="flex justify-center py-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue"></div>
+                  </div>
+                ) : vouchers.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="mb-4 flex justify-center">
+                      <svg className="text-gray-400" width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V17C3 18.1046 3.89543 19 5 19H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <path d="M16 19L18 21L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M7 9.01L7.01 8.99889" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M11 9.01L11.01 8.99889" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M15 9.01L15.01 8.99889" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <p className="text-dark-3 text-lg">You don&apos;t have any vouchers yet.</p>
+                    <p className="text-gray-500 text-sm mt-2">Check back later for exciting rewards!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {vouchers.map((voucher) => (
+                      <div
+                        key={voucher.id}
+                        className="relative shadow-1 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300"
+                      >
+                        <div className="flex h-full">
+                          {/* Left side - Type/Icon */}
+                          <div className="w-24 flex-shrink-0 bg-blue flex flex-col items-center justify-center text-white p-2">
+                            <span className="text-2xl font-bold text-center">
+                              {voucher.discountType === "PERCENTAGE" ? `${voucher.value}%` : `$${voucher.value}`}
+                            </span>
+                            <span className="text-[10px] uppercase font-bold tracking-wider">OFF</span>
+                          </div>
+
+                          {/* Right side - Info */}
+                          <div className="flex-1 min-w-0 p-4 bg-white border-l border-dashed border-gray-3 flex flex-col justify-between">
+                            <div className="flex justify-between items-start mb-1">
+                              <h3 className="font-bold text-dark truncate pr-2">{voucher.code}</h3>
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full ${voucher.type === 'PUBLIC' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'}`}>
+                                {voucher.type}
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5 mt-2">
+                              <div className="flex items-center gap-1.5 text-xs text-dark-3 overflow-hidden">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+                                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                                <span className="truncate">Min Spend: ${voucher.minOrderValue}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-dark-3 overflow-hidden">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+                                  <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                                </svg>
+                                <span className="truncate">Expires: {new Date(voucher.endDate).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(voucher.code);
+                                toast.success("Voucher code copied to clipboard!");
+                              }}
+                              className="mt-3 w-full py-1.5 border border-blue text-blue text-xs font-semibold rounded hover:bg-blue hover:text-white transition-colors duration-200 whitespace-nowrap px-1"
+                            >
+                              Copy Code
+                            </button>
+                          </div>
+                        </div>
+                        {/* Decorative circles for ticket effect */}
+                        <div className="absolute top-1/2 -left-2 w-4 h-4 bg-white rounded-full border-r border-gray-3 -translate-y-1/2"></div>
+                        <div className="absolute top-1/2 -right-2 w-4 h-4 bg-white rounded-full border-l border-gray-3 -translate-y-1/2"></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            {/* <!-- downloads tab content end -->
+            {/* <!-- vouchers tab content end -->
 
           <!-- addresses tab content start --> */}
             <div

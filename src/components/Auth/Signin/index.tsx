@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
@@ -200,7 +200,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
         </div>
-        <Toaster position="bottom-right" />
+
       </section>
     </>
   );

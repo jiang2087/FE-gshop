@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useState } from "react";
 import Discount from "./Discount";
 import OrderSummary from "./OrderSummary";
@@ -6,13 +6,13 @@ import { useAppSelector, useAppDispatch, RootState } from "@/redux/store";
 import SingleItem from "./SingleItem";
 import Breadcrumb from "../Common/Breadcrumb";
 import Link from "next/link";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import {
   fetchCart,
   fetchCartTotal,
   selectCartTotal,
 } from "@/redux/slices/cart-slice";
-import { getPreviewVoucher } from "@/api/discountApi";
+import { getPreviewVoucher, getDiscountsByVariants } from "@/api/discountApi";
 
 const Cart = ({ cartKey }: { cartKey?: string }) => {
   const dispatch = useAppDispatch();
@@ -22,6 +22,7 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
   );
   const [discountAmount, setDiscountAmount] = useState(0);
   const [code, setCode] = useState("");
+  const [discounts, setDiscounts] = useState<any>({});
   const totalPrice = useAppSelector(selectCartTotal);
 
   const handleReceiveCode = async (value: string) => {
@@ -56,9 +57,24 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      if (cartItems.length > 0) {
+        const variantIds = cartItems.map((item) => item.productVariantId);
+        try {
+          const discountData = await getDiscountsByVariants(variantIds);
+          setDiscounts(discountData);
+        } catch (error) {
+          console.error("Failed to fetch discounts", error);
+        }
+      }
+    };
+    fetchDiscounts();
+  }, [cartItems]);
+
   return (
     <>
-      <Toaster position="bottom-right" />
+
       {/* <!-- ===== Breadcrumb Section Start ===== --> */}
       <section>
         <Breadcrumb title={"Cart"} pages={["Cart"]} />
@@ -101,7 +117,15 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
                   {/* <!-- cart item --> */}
                   {cartItems.length > 0 &&
                     cartItems.map((item, key) => (
-                      <SingleItem item={item} key={key} />
+                      <SingleItem
+                        item={item}
+                        key={key}
+                        discountInfo={
+                          Array.isArray(discounts)
+                            ? discounts.find((d: any) => d?.productVariantId === item.productVariantId || d?.variantId === item.productVariantId)
+                            : discounts[item.productVariantId]
+                        }
+                      />
                     ))}
                 </div>
               </div>
@@ -109,7 +133,7 @@ const Cart = ({ cartKey }: { cartKey?: string }) => {
 
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11 mt-9">
               <Discount onChange={handleReceiveCode} />
-              <OrderSummary discountAmount={discountAmount} code={code} />
+              <OrderSummary discountAmount={discountAmount} code={code} discounts={discounts} />
             </div>
           </div>
         </section>

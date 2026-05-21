@@ -3,7 +3,7 @@ import Breadcrumb from "@/components/Common/Breadcrumb";
 import Link from "next/link";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import axios from "axios";
 import { useAppDispatch } from "@/redux/store";
 import { register } from "@/redux/slices/authSlice";
@@ -301,7 +301,7 @@ const Signup = () => {
             </div>
           </div>
         </div>
-        <Toaster position="bottom-right" />
+
       </section>
     </>
   );

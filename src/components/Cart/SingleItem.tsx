@@ -8,7 +8,7 @@ import {
 
 import Image from "next/image";
 
-const SingleItem = ({ item }) => {
+const SingleItem = ({ item, discountInfo }: { item: any; discountInfo?: any }) => {
   const [quantity, setQuantity] = useState(item.quantity);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -47,12 +47,54 @@ const SingleItem = ({ item }) => {
     }
   };
 
+  let discountLabel = null;
+  let discountedPrice = null;
+  const price = Number(item.price) || 0;
+  
+  const dInfo = discountInfo || item;
+  
+  if (dInfo) {
+    const discountType = dInfo.type || dInfo.discountType;
+    const discountValue = dInfo.value || dInfo.discountValue;
+    const dPrice = dInfo.discountedPrice;
+
+    if (discountType === "PERCENTAGE") {
+      if (discountValue) {
+        discountLabel = `${Math.round(discountValue)}% OFF`;
+        discountedPrice = price - (price * discountValue) / 100;
+      } else if (dPrice) {
+        discountedPrice = Number(dPrice);
+        discountLabel = `${Math.round(((price - discountedPrice) / price) * 100)}% OFF`;
+      }
+    } else if (discountType === "FIXED" && discountValue) {
+      discountLabel = `-$${discountValue}`;
+      discountedPrice = price - discountValue;
+    } else if (dPrice && dPrice < price) {
+      discountedPrice = Number(dPrice);
+      discountLabel = `-$${(price - discountedPrice).toFixed(0)}`;
+    } else if (typeof dInfo === 'number') {
+      discountedPrice = price - dInfo;
+      discountLabel = `-$${dInfo}`;
+    } else if (dInfo.discount) {
+      discountedPrice = price - Number(dInfo.discount);
+      discountLabel = `-$${dInfo.discount}`;
+    } else if (discountValue) {
+      discountLabel = "Giảm giá";
+      discountedPrice = price - discountValue;
+    }
+  }
+
   return (
     <div className="flex items-center border-t border-gray-3 py-5 px-7.5">
       <div className="min-w-[400px]">
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
-            <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
+            <div className="relative overflow-hidden flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
+              {discountLabel && (
+                <div className="absolute top-0 right-1 z-10 bg-red-light text-white text-[8px] font-bold uppercase py-0 px-1 rounded-[2px] shadow-sm">
+                  {discountLabel}
+                </div>
+              )}
               <Image width={200} height={200} src={item.imageUrl} alt="product" />
             </div>
 
@@ -66,7 +108,16 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[180px]">
-        <p className="text-dark">${item.price}</p>
+        <div className="flex flex-col">
+          <p className={`text-dark ${discountedPrice ? 'line-through text-dark-4 text-sm' : ''}`}>
+            ${price.toFixed(2)}
+          </p>
+          {discountedPrice && (
+            <p className="text-red font-medium">
+              ${discountedPrice.toFixed(2)}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="min-w-[275px]">
@@ -122,7 +173,7 @@ const SingleItem = ({ item }) => {
       </div>
 
       <div className="min-w-[200px]">
-        <p className="text-dark">${item.price * quantity}</p>
+        <p className="text-dark">${((discountedPrice || price) * quantity).toFixed(2)}</p>
       </div>
 
       <div className="min-w-[50px] flex justify-end">

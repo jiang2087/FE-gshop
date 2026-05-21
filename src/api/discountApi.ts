@@ -55,6 +55,31 @@ export interface DiscountResponse {
   updatedAt: string;
 }
 
+export interface UserVoucherResponse {
+  id: number;
+  code: string;
+  type: VoucherType;
+  discountType: DiscountType;
+  value: number;
+  minOrderValue: number;
+  maxDiscount: number;
+  startDate: string;
+  endDate: string;
+  active: boolean;
+}
+
+export enum VoucherType {
+  PUBLIC = "PUBLIC",
+  PRIVATE = "PRIVATE",
+}
+
+export enum DiscountType {
+  PERCENTAGE = "PERCENTAGE",
+  FIXED = "FIXED",
+}
+
+
+
 // Create a new voucher
 export const createVoucher = async (request: VoucherRequest) => {
   try {
@@ -170,14 +195,14 @@ export const getPreviewVoucher = async (
   userId: number,
   orderTotal: number
 ) => {
-    const response = await api.get("vouchers/preview", {
-      params: {
-        code,
-        userId,
-        orderTotal,
-      },
-    });
-    return response.data;
+  const response = await api.get("vouchers/preview", {
+    params: {
+      code,
+      userId,
+      orderTotal,
+    },
+  });
+  return response.data;
 };
 
 export const applyVoucher = async (
@@ -196,3 +221,30 @@ export const applyVoucher = async (
   return res.data;
 };
 
+export const getUserUsableVouchers = async (
+  userId: number
+): Promise<UserVoucherResponse[]> => {
+  try {
+    const response = await api.get(`/vouchers/user/${userId}/usable`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching usable vouchers:", error);
+    throw error;
+  }
+};
+
+export const getDiscountsByVariants = async (
+  variantIds: number[]
+) => {
+  try {
+    const res = await api.post(
+      "/discounts/by-variants",
+      variantIds
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching discounts by variants:", error);
+    throw error;
+  }
+};

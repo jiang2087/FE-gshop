@@ -7,21 +7,20 @@ import ShippingMethod from "./ShippingMethod";
 import PaymentMethod from "./PaymentMethod";
 import Coupon from "./Coupon";
 import Billing from "./Billing";
-import { selectCartTotal } from "@/redux/slices/cart-slice";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { getAddressesByUser } from "@/redux/slices/addressSlice";
-import { getPreviewVoucher, applyVoucher } from "@/api/discountApi";
+import { getPreviewVoucher, applyVoucher, getDiscountsByVariants } from "@/api/discountApi";
 import { useSearchParams, useRouter } from "next/navigation";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { createOrder, CreateOrderPayload } from "@/api/orderApi";
 import { fetchCart } from "@/redux/slices/cart-slice";
+import { getDiscountedPrice, findDiscountInfo, calcDiscountedSubtotal, calcOriginalSubtotal } from "@/utils/discountUtils";
 
 
 const Checkout = () => {
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const { addresses } = useAppSelector((state) => state.address);
   const cartItems = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useAppSelector(selectCartTotal);
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const code = searchParams.get("code");
@@ -48,6 +47,26 @@ const Checkout = () => {
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddressId);
 
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [discounts, setDiscounts] = useState<any>({});
+
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      if (cartItems.length > 0) {
+        const variantIds = cartItems.map((item) => item.productVariantId);
+        try {
+          const discountData = await getDiscountsByVariants(variantIds);
+          setDiscounts(discountData);
+        } catch (error) {
+          console.error("Failed to fetch discounts", error);
+        }
+      }
+    };
+    fetchDiscounts();
+  }, [cartItems]);
+
+  const originalSubtotal = calcOriginalSubtotal(cartItems);
+  const subtotal = calcDiscountedSubtotal(cartItems, discounts);
+  const productSavings = originalSubtotal - subtotal;
 
   const handleApplyCoupon = async (code: string) => {
     const toastId = toast.loading("loading...");
@@ -59,7 +78,7 @@ const Checkout = () => {
       const previewDiscount = await getPreviewVoucher(
         code,
         user.id,
-        totalPrice,
+        subtotal,
       );
       setCoupon(code);
       setDiscountAmount(previewDiscount ?? 0);
@@ -198,22 +217,60 @@ const Checkout = () => {
                     </div>
 
                     {cartItems.map((cart, index) => {
+                      const price = Number(cart.price) || 0;
+                      const discountInfo = findDiscountInfo(discounts, cart.productVariantId);
+                      const discountedPrice = getDiscountedPrice(price, discountInfo);
+
+                      const itemOriginalSubtotal = price * cart.quantity;
+                      const itemFinalSubtotal = (discountedPrice ?? price) * cart.quantity;
+
                       return (
                         <div
                           key={index}
                           className="flex items-center justify-between py-5 border-b border-gray-3"
                         >
                           <div>
-                            <p className="text-dark">{cart?.sku}</p>
+                            <p className="text-dark font-medium">{cart?.sku}</p>
+                            <p className="text-dark-4 text-sm mt-0.5">Quantity: {cart.quantity}</p>
                           </div>
-                          <div>
-                            <p className="text-dark text-right">
-                              ${cart.price.toFixed(2)}
+                          <div className="text-right">
+                            <p className={`text-dark ${discountedPrice !== null ? 'line-through text-dark-4 text-sm' : ''}`}>
+                              ${itemOriginalSubtotal.toFixed(2)}
                             </p>
+                            {discountedPrice !== null && (
+                              <p className="text-red font-semibold text-sm mt-0.5">
+                                ${itemFinalSubtotal.toFixed(2)}
+                              </p>
+                            )}
                           </div>
                         </div>
                       );
                     })}
+                    {/* <!-- subtotal --> */}
+                    <div className="flex items-center justify-between py-5 border-b border-gray-3">
+                      <div>
+                        <p className="text-dark">SUBTOTAL</p>
+                      </div>
+                      <div>
+                        <p className="text-dark text-right">${originalSubtotal.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    {/* <!-- product discount savings --> */}
+                    {productSavings > 0 && (
+                      <div className="flex items-center justify-between py-5 border-b border-gray-3">
+                        <div>
+                          <p className="text-dark">PRODUCT DISCOUNT</p>
+                        </div>
+                        <div>
+                          <p className="text-green-500 text-right">
+                            -${productSavings.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* <!-- shipping fee --> */}
                     <div className="flex items-center justify-between py-5 border-b border-gray-3">
                       <div>
                         <p className="text-dark">SHIPPING FEE</p>
@@ -223,11 +280,11 @@ const Checkout = () => {
                       </div>
                     </div>
 
-                    {/* <!-- discount --> */}
+                    {/* <!-- voucher discount --> */}
                     {discountAmount > 0 && (
                       <div className="flex items-center justify-between py-5 border-b border-gray-3">
                         <div>
-                          <p className="text-dark">DISCOUNT</p>
+                          <p className="text-dark">VOUCHER DISCOUNT</p>
                         </div>
                         <div>
                           <p className="text-green-500 text-right">
@@ -247,9 +304,7 @@ const Checkout = () => {
                           $
                           {Math.max(
                             0,
-                            Number(totalPrice.toFixed(2)) +
-                              1.2 -
-                              discountAmount,
+                            subtotal + 1.2 - discountAmount,
                           ).toFixed(2)}
                         </p>
                       </div>
@@ -278,7 +333,7 @@ const Checkout = () => {
           </article>
         </div>
       </section>
-      <Toaster position="bottom-right" />
+
     </>
   );
 };

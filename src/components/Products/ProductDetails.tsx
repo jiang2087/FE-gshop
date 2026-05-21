@@ -97,6 +97,7 @@ const formatValue = (item, value) => {
 };
 
 const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
+
   const [activeColor, setActiveColor] = useState("blue");
   const { openPreviewModal } = usePreviewSlider();
   const user = useAppSelector((state: RootState) => state.auth.user);
@@ -104,6 +105,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
   const [previewImg, setPreviewImg] = useState(0);
   const [quantity, setQuantity] = useState(1);
+
 
   const [activeTab, setActiveTab] = useState("tabOne");
   const [hover, setHover] = useState(0);
@@ -120,6 +122,17 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
   >([]);
   const searchParams = useSearchParams();
   const productId = parseInt(searchParams.get("id") ?? "1", 10);
+  let variant = product1?.productVariants?.[previewImg];
+  const price = variant?.originalPrice || 0;
+  const discountedPrice = variant?.discountedPrice || 0;
+  const discountType = variant?.discountType;
+  const hasDiscount = discountedPrice > 0 && discountedPrice < price;
+  const discountLabel = hasDiscount
+    ? discountType === "PERCENTAGE"
+      ? `${Math.round(((price - discountedPrice) / price) * 100)}% OFF`
+      : `-${(price - discountedPrice).toFixed(0)}$`
+    : "";
+
   const [review, setReview] = useState({
     userId: user?.id || null,
     productVariantId: productId || null,
@@ -256,6 +269,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
   useEffect(() => {
     const fetchData = async () => {
       const data = await getProductById(productId);
+      console.log("data", data);
       setProduct(data);
       setTypeP(data?.productType?.toLowerCase());
     };
@@ -276,7 +290,6 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
   useEffect(() => {
     const fetchReviews = async () => {
       if (!product1?.id) return;
-
       try {
         const reviewsData = await getReviewsByProductId(product1.id);
         setReviews(reviewsData);
@@ -348,8 +361,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                         onClick={() => setPreviewImg(key)}
                         key={key}
                         className={`flex items-center justify-center w-15 sm:w-25 h-15 sm:h-25 overflow-hidden rounded-lg bg-gray-2 shadow-1 ease-out duration-200 border-2 hover:border-blue ${key === previewImg
-                            ? "border-blue"
-                            : "border-transparent"
+                          ? "border-blue"
+                          : "border-transparent"
                           }`}
                       >
                         <Image
@@ -370,9 +383,11 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                       {product1?.name}
                     </h2>
 
-                    <div className="inline-flex font-medium text-custom-sm text-white bg-blue rounded py-0.5 px-2.5">
-                      30% OFF
-                    </div>
+                    {hasDiscount && (
+                      <div className="inline-flex font-medium text-custom-sm text-white bg-blue rounded py-0.5 px-2.5">
+                        {discountLabel}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-5.5 mb-4.5">
@@ -561,15 +576,16 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                     </div>
                   </div>
 
-                  <h3 className="font-medium text-custom-1 mb-4.5">
-                    <span className="text-sm sm:text-base text-dark">
-                      Price: ${product1?.productVariants[previewImg]?.price}{" "}
+                  <div className="flex items-center gap-3.5 mb-6">
+                    <span className="font-bold text-2xl sm:text-3xl text-dark">
+                      Price: ${hasDiscount ? discountedPrice : price}
                     </span>
-                    <span className="line-through">
-                      {" "}
-                      {product1?.productVariant?.discountedPrice || 0}${" "}
-                    </span>
-                  </h3>
+                    {hasDiscount && (
+                      <span className="line-through text-red-light text-lg sm:text-xl">
+                        ${(price - discountedPrice).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
 
                   <ul className="flex flex-col gap-2">
                     <li className="flex items-center gap-2.5">
@@ -631,8 +647,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                                 {/* Circle */}
                                 <div
                                   className={`w-5.5 h-5.5 rounded-full border-2 flex items-center justify-center ${activeColor === color
-                                      ? "ring-2 ring-black"
-                                      : ""
+                                    ? "ring-2 ring-black"
+                                    : ""
                                     }`}
                                   style={{
                                     borderColor: isWhite ? "#000" : color,
@@ -663,7 +679,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                             </h4>
                           </div>
                           <div className="text-dark">
-                            {product1?.[item.key]}
+                            {product1?.productAttributes?.[item.key]}
                           </div>
                         </div>
                       ))}
@@ -765,8 +781,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                     key={key}
                     onClick={() => setActiveTab(item.id)}
                     className={`font-medium lg:text-lg ease-out duration-200 hover:text-blue relative before:h-0.5 before:bg-blue before:absolute before:left-0 before:bottom-0 before:ease-out before:duration-200 hover:before:w-full ${activeTab === item.id
-                        ? "text-blue before:w-full"
-                        : "text-dark before:w-0"
+                      ? "text-blue before:w-full"
+                      : "text-dark before:w-0"
                       }`}
                   >
                     {item.title}
@@ -848,7 +864,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                       </div>
                       <div className="w-full">
                         <p className="text-sm sm:text-base text-dark">
-                          {formatValue(item, product1?.[item.key])}
+                          {formatValue(item, product1?.[item.key] ?? product1?.productAttributes?.[item.key])}
                         </p>
                       </div>
                     </div>
@@ -912,8 +928,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                                 <span
                                   key={index}
                                   className={`cursor-pointer ${index < review?.rating
-                                      ? "text-[#FBB040]"
-                                      : "text-gray-5"
+                                    ? "text-[#FBB040]"
+                                    : "text-gray-5"
                                     }`}
                                 >
                                   <svg
@@ -1021,8 +1037,8 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                             </span>
                             <span
                               className={`text-sm ${review.comment.length >= 200
-                                  ? "text-red-light"
-                                  : "text-gray-5"
+                                ? "text-red-light"
+                                : "text-gray-5"
                                 }`}
                             >
                               {review?.comment.length}/250

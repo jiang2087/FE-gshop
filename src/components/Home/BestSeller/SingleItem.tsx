@@ -13,6 +13,19 @@ const SingleItem = ({item, cartKey}: { item: any, cartKey: string }) => {
   const { openModal } = useModalContext();
   const dispatch = useDispatch<AppDispatch>();
 
+  const variant = item?.productVariants?.[0];
+  const price = variant?.originalPrice || 0;
+  const discountedPrice = variant?.discountedPrice;
+  const discountType = variant?.discountType;
+  const hasDiscount =
+    discountedPrice != null && discountedPrice > 0 && discountedPrice < price;
+  const displayPrice = hasDiscount ? discountedPrice : price;
+  const discountLabel = hasDiscount
+    ? discountType === "PERCENTAGE"
+      ? `${Math.round(((price - discountedPrice!) / price) * 100)}% OFF`
+      : `-$${(price - discountedPrice!).toFixed(0)}`
+    : "";
+
   // update the QuickView state
   const handleQuickViewUpdate = () => {
     dispatch(updateQuickView({ ...item }));
@@ -45,6 +58,11 @@ const SingleItem = ({item, cartKey}: { item: any, cartKey: string }) => {
   return (
     <div className="group">
       <div className="relative overflow-hidden rounded-lg bg-[#F6F7FB] min-h-[403px]">
+        {discountLabel && (
+          <div className="absolute top-3 right-3 z-10 bg-red-light text-white text-[10px] font-bold uppercase py-0 px-3 rounded-[4px] shadow-sm">
+            {discountLabel}
+          </div>
+        )}
         <div className="text-center px-4 py-7.5">
           <div className="flex items-center justify-center gap-2.5 mb-2">
             <div className="flex items-center gap-1">
@@ -68,8 +86,12 @@ const SingleItem = ({item, cartKey}: { item: any, cartKey: string }) => {
           </h3>
 
           <span className="flex items-center justify-center gap-2 font-medium text-lg">
-            <span className="text-dark">${item.productVariants?.[0]?.price?.toFixed(2) || "0.00"}</span>
-            <span className="text-dark-4 line-through">${item.productVariants?.[0]?.originalPrice?.toFixed(2) || "0.00"}</span>
+            <span className="text-dark">${displayPrice.toFixed(2)}</span>
+            {hasDiscount && (
+              <span className="text-dark-4 line-through text-custom-sm">
+                ${price.toFixed(2)}
+              </span>
+            )}
           </span>
         </div>
 

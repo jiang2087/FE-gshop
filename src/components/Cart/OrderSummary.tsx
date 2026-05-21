@@ -1,16 +1,18 @@
-﻿import { selectCartTotal } from "@/redux/slices/cart-slice";
 import { useAppSelector } from "@/redux/store";
-import { stat } from "node:fs";
 import Link from "next/link";
+import { getDiscountedPrice, findDiscountInfo, calcDiscountedSubtotal } from "@/utils/discountUtils";
 const OrderSummary = ({
   discountAmount = 0,
   code,
+  discounts,
 }: {
   discountAmount?: number;
   code: string;
+  discounts?: any;
 }) => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
-  const totalPrice = useAppSelector(selectCartTotal);
+
+  const subtotal = calcDiscountedSubtotal(cartItems, discounts);
 
   return (
     <div className="lg:max-w-[455px] w-full">
@@ -32,21 +34,28 @@ const OrderSummary = ({
           </div>
 
           {/* <!-- product item --> */}
-          {cartItems.map((item, key) => (
-            <div
-              key={key}
-              className="flex items-center justify-between py-5 border-b border-gray-3"
-            >
-              <div>
-                <p className="text-dark">{item.sku}</p>
+          {cartItems.map((item, key) => {
+            const price = Number(item.price) || 0;
+            const discountInfo = findDiscountInfo(discounts, item.productVariantId);
+            const discountedPrice = getDiscountedPrice(price, discountInfo);
+            const itemSubtotal = (discountedPrice ?? price) * item.quantity;
+
+            return (
+              <div
+                key={key}
+                className="flex items-center justify-between py-5 border-b border-gray-3"
+              >
+                <div>
+                  <p className="text-dark">{item.sku}</p>
+                </div>
+                <div>
+                  <p className="text-dark text-right">
+                    ${itemSubtotal.toFixed(2)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-dark text-right">
-                  ${item.price * item.quantity}
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* <!-- discount --> */}
           {discountAmount > 0 && (
@@ -69,7 +78,7 @@ const OrderSummary = ({
             </div>
             <div>
               <p className="font-medium text-lg text-dark text-right">
-                ${Math.max(0, totalPrice - discountAmount).toFixed(2)}
+                ${Math.max(0, subtotal - discountAmount).toFixed(2)}
               </p>
             </div>
           </div>

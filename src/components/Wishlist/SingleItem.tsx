@@ -88,9 +88,9 @@ const SingleItem = ({ item, cartKey }: { item: any; cartKey: string }) => {
 
       <div className="min-w-[205px]">
         <p className="text-dark">
-          {new Intl.NumberFormat("vi-VN", {
+          {new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: "VND",
+            currency: "USD",
           }).format(item.price)}
         </p>
       </div>

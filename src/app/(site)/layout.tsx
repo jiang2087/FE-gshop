@@ -16,6 +16,7 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import PreLoader from "@/components/Common/PreLoader";
 import { Toaster } from "react-hot-toast";
+import AIChat from "@/components/Common/AIChat";
 
 export default function RootLayout({
   children,
@@ -41,14 +42,16 @@ export default function RootLayout({
                   <PreviewSliderProvider>
                     <Header />
                     {children}
-                    <QuickViewModal cartKey=""/>
+                    <QuickViewModal cartKey="" />
                     <CartSidebarModal />
                     <PreviewSliderModal />
+                    <ScrollToTop />
+                    <AIChat />
                   </PreviewSliderProvider>
                 </ModalProvider>
               </CartModalProvider>
             </ReduxProvider>
-            <ScrollToTop />
+            <Toaster position="top-right" />
             <Footer />
           </>
         )}

@@ -1,7 +1,7 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { login } from "@/redux/slices/authSlice";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 const Login = () => {
@@ -35,7 +35,7 @@ const Login = () => {
 
   return (
     <>
-      <Toaster position="top-right" />
+
       <div className="bg-white shadow-1 rounded-[10px]">
         <div
           onClick={() => setDropdown(!dropdown)}

@@ -14,9 +14,9 @@ export default function ScrollToTop() {
   };
 
   useEffect(() => {
-    // Button is displayed after scrolling for 500 pixels
+    // Button is displayed after scrolling for 300 pixels
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
+      if (window.scrollY > 300) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -33,9 +33,8 @@ export default function ScrollToTop() {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className={`items-center justify-center w-10 h-10 rounded-[4px] shadow-lg bg-blue ease-out duration-200 hover:bg-blue-dark fixed bottom-8 right-8 z-999 ${
-            isVisible ? "flex" : "hidden"
-          }`}
+          className="flex items-center justify-center w-10 h-10 rounded-[4px] shadow-lg bg-blue ease-out duration-200 hover:bg-blue-dark fixed bottom-[30px] right-[95px] z-[99998]"
+          aria-label="Scroll to top"
         >
           <svg
             className="fill-white w-5 h-5"

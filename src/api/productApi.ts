@@ -162,6 +162,18 @@ export const getProductTypeCount = async (types) => {
 };
 
 
+export const getSimilarProducts = async (id) => {
+  try {
+    const response = await api.get(`/products/${id}/similar`);
+
+    return response.data;
+
+  } catch (error) {
+    console.error("Error fetching similar products:", error);
+    throw error;
+  }
+};
+
 export const getProductsByPriceRange = async (types, min, max, params) => {
   try {
     const response = await api.get(`/products/price-range`, {

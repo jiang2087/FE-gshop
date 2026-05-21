@@ -2,26 +2,70 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import Image from "next/image";
+import Link from "next/link";
 
-const SingleItem = ({ item, onRemove }) => {
+const SingleItem = ({ item, onRemove, discountInfo }: any) => {
   const dispatch = useDispatch<AppDispatch>();
-
   const handleRemoveFromCart = () => {
     dispatch(onRemove(item.cartItemId));
   };
 
+  let discountLabel = null;
+  let discountedPrice = null;
+  const price = Number(item.price) || 0;
+  console.log(discountInfo)
+  if (discountInfo?.value > 0) {
+    const discountType = discountInfo.type;
+    const discountValue = discountInfo.value;
+    const dPrice = discountInfo.discountedPrice;
+
+    if (discountType === "PERCENTAGE") {
+      if (discountValue) {
+        discountLabel = `${Math.round(discountValue)}% OFF`;
+        discountedPrice = price - (price * discountValue) / 100;
+      } else if (dPrice) {
+        discountedPrice = Number(dPrice);
+        discountLabel = `${Math.round(((price - discountedPrice) / price) * 100)}% OFF`;
+      }
+    } else if (discountType === "FIXED" && discountValue) {
+      discountLabel = `-$${discountValue}`;
+      discountedPrice = price - discountValue;
+    } else if (dPrice && dPrice < price) {
+      discountedPrice = Number(dPrice);
+      discountLabel = `-$${(price - discountedPrice).toFixed(0)}`;
+    } else if (typeof discountInfo === 'object' && discountInfo?.value) {
+      // In case the API just returns the discounted amount directly
+      discountedPrice = Number(discountInfo?.value);
+      discountLabel = `-$${discountInfo?.value}`;
+    }
+  }
+
   return (
     <div className="flex items-center justify-between gap-5">
       <div className="w-full flex items-center gap-6">
-        <div className="flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
+        <div className="relative overflow-hidden flex items-center justify-center rounded-[10px] bg-gray-3 max-w-[90px] w-full h-22.5">
+          {discountLabel && (
+            <div className="absolute top-0 right-1 z-10 bg-red-light text-white text-[8px] font-bold uppercase py-0 px-1 rounded-[2px] shadow-sm">
+              {discountLabel}
+            </div>
+          )}
           <Image src={item.imageUrl} alt="product" width={100} height={100} />
         </div>
 
         <div>
           <h3 className="font-medium text-dark mb-1 ease-out duration-200 hover:text-blue">
-            <a href="#"> {item.sku} </a>
+            <Link href={`/products?id=${item.id}`}> {item.sku} </Link>
           </h3>
-          <p className="text-custom-sm">Price: ${item.price}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className={`text-custom-sm ${discountedPrice ? 'line-through text-dark-4' : 'text-dark'}`}>
+              ${Number(item.price).toFixed(2)}
+            </p>
+            {discountedPrice && (
+              <p className="text-custom-sm text-red font-medium">
+                ${discountedPrice.toFixed(2)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

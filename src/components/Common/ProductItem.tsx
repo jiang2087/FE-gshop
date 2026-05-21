@@ -15,6 +15,18 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
   const { openModal } = useModalContext();
   const avgRating = Math.round(item?.avgRating || 5);
   const dispatch = useDispatch<AppDispatch>();
+  const variant = item?.productVariants?.[0];
+  const price = variant?.originalPrice || 0;
+  const discountedPrice = variant?.discountedPrice;
+  const discountType = variant?.discountType;
+  const hasDiscount =
+    discountedPrice != null && discountedPrice > 0 && discountedPrice < price;
+  const displayPrice = hasDiscount ? discountedPrice : price;
+  const discountLabel = hasDiscount
+    ? discountType === "PERCENTAGE"
+      ? `${Math.round(((price - discountedPrice!) / price) * 100)}% OFF`
+      : `-$${(price - discountedPrice!).toFixed(0)}`
+    : "";
 
   // update the QuickView state
   const handleQuickViewUpdate = () => {
@@ -48,6 +60,11 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
   return (
     <div className="group">
       <div className="relative overflow-hidden flex items-center justify-center rounded-lg bg-[#F6F7FB] min-h-[270px] mb-4">
+        {discountLabel && (
+          <div className="absolute top-3 right-3 z-10 bg-red-light text-white text-[10px] font-bold uppercase py-0 px-3 rounded-[4px] shadow-sm">
+            {discountLabel}
+          </div>
+        )}
         <Image
           src={item?.thumbnail || "/images/shop/shop-01.png"}
           alt=""
@@ -126,10 +143,10 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
         <div className="flex items-center gap-1">
           {[...Array(5)].map((_, index) => (
             <svg
-            key={index}
-              className= { avgRating > index ? "fill-[#FFA645]" : "fill-[#E0E0E0]" }
+              key={index}
+              className={avgRating > index ? "fill-[#FFA645]" : "fill-[#E0E0E0]"}
               width="14"
-            height="14"
+              height="14"
               viewBox="0 0 18 18"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -163,12 +180,12 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">
-        <span className="text-dark">
-          ${item?.productVariants?.[0]?.price || "0"}
-        </span>
-        <span className="text-dark-4 line-through">
-          ${item?.productVariants?.[0]?.originalPrice || "0"}
-        </span>
+        <span className="text-dark">${displayPrice.toFixed(2)}</span>
+        {hasDiscount && (
+          <span className="text-dark-4 line-through text-custom-sm">
+            ${(variant?.originalPrice - variant?.discountedPrice).toFixed(2)}
+          </span>
+        )}
       </span>
     </div>
   );

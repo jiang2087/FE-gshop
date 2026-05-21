@@ -1,8 +1,8 @@
-﻿import React from "react";
+import React from "react";
 import { CalendarDays } from "lucide-react";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import {collectVoucher} from "@/api/discountApi";
+import { collectVoucher } from "@/api/discountApi";
 
 type Voucher = {
   active: boolean;
@@ -33,11 +33,11 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
   const now = new Date();
   const start = new Date(voucher.startDate);
   const end = new Date(voucher.endDate);
- const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(false);
   const quantity = Math.max(0, voucher.quantity || 0);
   const usedCount = Math.min(
     Math.max(0, voucher.usedCount || 0),
-    quantity || 0,
+    quantity || 1,
   );
   const remaining = Math.max(0, quantity - usedCount);
   const progressPercent =
@@ -55,7 +55,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
   const discountLabel =
     voucher.discountType === "FIXED_AMOUNT"
       ? (`Giảm ${formatUSD(voucher.value)}`)
-      
+
       : `Giảm ${Math.round(voucher.value)}%`;
 
 
@@ -64,39 +64,39 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
     if (isExpired) {
       return {
         label: "Hết hạn",
-        chip: "bg-red-50 text-red-700",
-        tone: "border-red-200",
+        chip: "bg-red-light-6 text-red-dark",
+        tone: "border-red-light-4",
       };
     }
 
     if (isOutOfStock) {
       return {
         label: "Hết lượt",
-        chip: "bg-slate-100 text-slate-700",
-        tone: "border-slate-200",
+        chip: "bg-gray-2 text-gray-6",
+        tone: "border-gray-3",
       };
     }
 
     if (isNearlyOut) {
       return {
         label: "Sắp hết",
-        chip: "bg-amber-50 text-amber-700",
-        tone: "border-amber-200",
+        chip: "bg-yellow-light-4 text-yellow-dark",
+        tone: "border-yellow-light-2",
       };
     }
 
     if (isUsable) {
       return {
         label: "Còn hạn",
-        chip: "bg-emerald-50 text-emerald-700",
-        tone: "border-emerald-200",
+        chip: "bg-green-light-6 text-green-dark",
+        tone: "border-green-light-4",
       };
     }
 
     return {
       label: "Tạm khóa",
-      chip: "bg-gray-100 text-gray-700",
-      tone: "border-gray-200",
+      chip: "bg-gray-2 text-gray-6",
+      tone: "border-gray-3",
     };
   };
 
@@ -106,7 +106,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
 
     try {
       await navigator.clipboard.writeText(voucher.code);
-      collectVoucher(userId, voucher.code);      
+      collectVoucher(userId, voucher.code);
       setSaved(true);
       toast.success("Đã sao chép mã voucher");
     } catch {
@@ -135,14 +135,13 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
   };
   return (
     <article
-      className={`h-ful rounded-2xl text-dark bg-meta p-8 shadow-sm transition sm:p-4 ${status.tone} ${
-        isUsable ? "hover:shadow-md" : "opacity-90"
-      }`}
+      className={`h-full rounded-2xl text-dark bg-meta p-8 shadow-sm transition sm:p-4 ${status.tone} border ${isUsable ? "hover:shadow-md" : "opacity-90"
+        }`}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
           {/* Mapping: `code` -> hiển thị mã voucher */}
-          <p className="truncate text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <p className="truncate text-xs font-semibold uppercase tracking-wide text-teal">
             {voucher.code}
           </p>
         </div>
@@ -185,7 +184,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
           {voucher.type === "FREE_SHIP" ? "free ship" : discountLabel}
         </text>
       </svg>
-      <div className="space-y-2.5 text-xs text-gray-600 sm:text-sm">
+      <div className="space-y-2.5 text-xs text-gray-7 sm:text-sm">
         {/* Mapping: `minOrderValue` -> "Đơn tối thiểu 200K" */}
         <p>
           Đơn tối thiểu:{" "}
@@ -196,28 +195,27 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
 
         {/* Mapping: `endDate` -> "HSD: ..." */}
         <div className="flex items-center gap-1.5">
-          <CalendarDays className="h-3.5 w-3.5 text-gray-500 sm:h-4 sm:w-4" />
+          <CalendarDays className="h-3.5 w-3.5 text-gray-5 sm:h-4 sm:w-4" />
           <span className="truncate">HSD: {formatDate(voucher.endDate)}</span>
         </div>
       </div>
 
       <div className="mt-3">
-        <div className="mb-1.5 flex items-center justify-between text-[11px] text-gray-500 sm:text-xs">
+        <div className="mb-1.5 flex items-center justify-between text-[11px] text-gray-6 sm:text-xs">
           {/* Mapping: `usedCount / quantity` -> progress usage */}
           <span>
             Đã dùng {usedCount}/{quantity}
           </span>
           <span>{progressPercent}%</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-2">
           <div
-            className={`h-full rounded-full transition-all ${
-              isExpired || isOutOfStock
-                ? "bg-gray-400"
-                : isNearlyOut
-                  ? "bg-amber-500"
-                  : "bg-emerald-500"
-            }`}
+            className={`h-full rounded-full transition-all ${isExpired || isOutOfStock
+              ? "bg-gray-5"
+              : isNearlyOut
+                ? "bg-yellow"
+                : "bg-green"
+              }`}
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -227,16 +225,15 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
         type="button"
         disabled={!isUsable}
         onClick={handleSaveVoucher}
-        className={`mt-4 text-red-light-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
-          isUsable
-            ? "bg-gray-900 text-dark hover:bg-black"
-            : "cursor-not-allowed bg-gray-200 text-gray-500"
-        }`}
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${isUsable
+          ? "hover:bg-dark-2"
+          : "cursor-not-allowed bg-gray-2 text-gray-5"
+          }`}
         style={{
-            background: saved ? 'bg-meta-4' : '#2296f3',
-            color: 'white',
-            cursor: saved ? 'not-allowed' : 'pointer',
-          }}
+          background: saved ? '#8D93A5' : '#2296f3',
+          color: 'white',
+          cursor: saved ? 'not-allowed' : 'pointer',
+        }}
       >
         {/* CTA: usable -> "Dùng ngay", non-usable -> "Lưu" */}
         <img
@@ -245,7 +242,7 @@ const SingleItem = ({ voucher, userId }: { voucher: Voucher, userId: number }) =
           src="https://img.icons8.com/dusk/64/discount-ticket.png"
           alt="discount-ticket"
         />
-       {saved ? 'Đã lưu' : 'Lưu'}
+        {saved ? 'Đã lưu' : 'Lưu'}
       </button>
     </article>
   );
