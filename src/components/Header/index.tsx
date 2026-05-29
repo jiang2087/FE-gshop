@@ -64,12 +64,12 @@ const Header = () => {
             }`}
         >
           {/* <!-- header top left --> */}
-          <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">
+          <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10 ">
             <Link className="flex-shrink-0" href="/">
               <Image
                 src="/images/logo/logo.svg"
                 alt="Logo"
-                width={219}
+                width={200}
                 height={36}
               />
             </Link>

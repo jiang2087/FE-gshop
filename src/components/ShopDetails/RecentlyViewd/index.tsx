@@ -1,17 +1,32 @@
 "use client";
-import React from "react";
-import shopData from "@/components/Shop/shopData";
+import React, { useCallback, useRef, useEffect, useState } from "react";
 import ProductItem from "@/components/Common/ProductItem";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { getSimilarProducts } from "@/api/productApi";
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useCallback, useRef } from "react";
 import "swiper/css/navigation";
 import "swiper/css";
 
-const RecentlyViewdItems = () => {
-  const sliderRef = useRef(null);
+const RecentlyViewdItems = ({ cartKey, productId }: { cartKey: string; productId?: number }) => {
+  const sliderRef = useRef<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const searchParams = useSearchParams();
+  const id = productId || parseInt(searchParams.get("id") || "0", 10);
+
+  useEffect(() => {
+    if (id) {
+      getSimilarProducts(id)
+        .then((data) => {
+          setProducts(data);
+        })
+        .catch((err) => {
+          console.error("Error fetching similar products", err);
+        });
+    }
+  }, [id]);
 
   const handlePrev = useCallback(() => {
     if (!sliderRef.current) return;
@@ -22,6 +37,10 @@ const RecentlyViewdItems = () => {
     if (!sliderRef.current) return;
     sliderRef.current.swiper.slideNext();
   }, []);
+
+  if (products.length === 0) {
+    return null; // Do not show section if no similar products
+  }
 
   return (
     <section className="overflow-hidden pt-17.5">
@@ -37,10 +56,10 @@ const RecentlyViewdItems = () => {
                   height={17}
                   alt="icon"
                 />
-                Categories
+                Suggested Products
               </span>
               <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">
-                Browse by Category
+                Recommended for you
               </h2>
             </div>
 
@@ -89,9 +108,9 @@ const RecentlyViewdItems = () => {
             spaceBetween={20}
             className="justify-between"
           >
-            {shopData.map((item, key) => (
+            {products.map((item, key) => (
               <SwiperSlide key={key}>
-                <ProductItem item={item} />
+                <ProductItem cartKey={cartKey} item={item} />
               </SwiperSlide>
             ))}
           </Swiper>

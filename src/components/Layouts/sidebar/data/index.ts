@@ -66,45 +66,51 @@ export const NAV_DATA = [
         url: "/admin/settings",
         items: [],
       },
-    ],
-  },
-  {
-    label: "OTHERS",
-    items: [
       {
-        title: "Charts",
-        icon: Icons.PieChart,
-        items: [
-          {
-            title: "Basic Chart",
-            url: "/admin/charts/basic-chart",
-          },
-        ],
-      },
-      {
-        title: "UI Elements",
-        icon: Icons.FourCircle,
-        items: [
-          {
-            title: "Alerts",
-            url: "/ui-elements/alerts",
-          },
-          {
-            title: "Buttons",
-            url: "/admin/ui-elements/buttons",
-          },
-        ],
-      },
-      {
-        title: "Authentication",
-        icon: Icons.Authentication,
-        items: [
-          {
-            title: "Sign In",
-            url: "/admin/auth/sign-in",
-          },
-        ],
+        title: "Data Ingestion",
+        url: "/admin/data-ingestion",
+        icon: Icons.OrderIcon,
+        items: [],
       },
     ],
   },
+  // {
+  //   label: "OTHERS",
+  //   items: [
+  //     {
+  //       title: "Charts",
+  //       icon: Icons.PieChart,
+  //       items: [
+  //         {
+  //           title: "Basic Chart",
+  //           url: "/admin/charts/basic-chart",
+  //         },
+  //       ],
+  //     },
+  //     {
+  //       title: "UI Elements",
+  //       icon: Icons.FourCircle,
+  //       items: [
+  //         {
+  //           title: "Alerts",
+  //           url: "/ui-elements/alerts",
+  //         },
+  //         {
+  //           title: "Buttons",
+  //           url: "/admin/ui-elements/buttons",
+  //         },
+  //       ],
+  //     },
+  //     {
+  //       title: "Authentication",
+  //       icon: Icons.Authentication,
+  //       items: [
+  //         {
+  //           title: "Sign In",
+  //           url: "/admin/auth/sign-in",
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // },
 ];

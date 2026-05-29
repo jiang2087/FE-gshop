@@ -33,7 +33,7 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    Name: James Septimus
+                    Mail: haubnvn108@gmail.com
                   </p>
 
                   <p className="flex items-center gap-4">
@@ -61,10 +61,10 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    Phone: 1234 567890
+                    Phone: 0972581726
                   </p>
 
-                  <p className="flex gap-4">
+                  {/* <p className="flex gap-4">
                     <svg
                       className="mt-0.5 shrink-0"
                       width="22"
@@ -81,7 +81,7 @@ const Contact = () => {
                       />
                     </svg>
                     Address: 7398 Smoke Ranch RoadLas Vegas, Nevada 89128
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>

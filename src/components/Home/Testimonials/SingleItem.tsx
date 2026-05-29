@@ -5,7 +5,6 @@ import Link from "next/link";
 
 const SingleItem = ({ testimonial, nameProduct }: { testimonial: any; nameProduct: string | null }) => {
   const rating = Math.min(testimonial.rating || 5, 5);
-
   return (
     <div className="shadow-testimonial bg-white rounded-[10px] py-7.5 px-4 sm:px-8.5 m-1">
       <div className="flex items-center gap-1 mb-5 justify-between">
@@ -46,7 +45,7 @@ const SingleItem = ({ testimonial, nameProduct }: { testimonial: any; nameProduc
       <a href="#" className="flex items-center gap-4">
         <div className="w-12.5 h-12.5 rounded-full overflow-hidden">
           <Image
-            src={testimonial?.avatar}
+            src={`${testimonial?.avatar}`}
             alt={testimonial?.username}
             className="w-12.5 h-12.5 rounded-full overflow-hidden"
             width={50}

@@ -9,11 +9,11 @@ const SingleItem = ({ item, onRemove, discountInfo }: any) => {
   const handleRemoveFromCart = () => {
     dispatch(onRemove(item.cartItemId));
   };
-
+  console.log(item.imageUrl)
   let discountLabel = null;
   let discountedPrice = null;
   const price = Number(item.price) || 0;
-  console.log(discountInfo)
+  
   if (discountInfo?.value > 0) {
     const discountType = discountInfo.type;
     const discountValue = discountInfo.value;
@@ -39,7 +39,6 @@ const SingleItem = ({ item, onRemove, discountInfo }: any) => {
       discountLabel = `-$${discountInfo?.value}`;
     }
   }
-
   return (
     <div className="flex items-center justify-between gap-5">
       <div className="w-full flex items-center gap-6">
@@ -49,7 +48,7 @@ const SingleItem = ({ item, onRemove, discountInfo }: any) => {
               {discountLabel}
             </div>
           )}
-          <Image src={item.imageUrl} alt="product" width={100} height={100} />
+          <Image src={"/products/laptops/Acer_Aspire_5_1.webp"} alt="product" width={100} height={100} />
         </div>
 
         <div>

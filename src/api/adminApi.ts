@@ -630,3 +630,27 @@ export const getOrdersByUserIdAdmin = async (userId: number) => {
         throw error;
     }
 };
+
+
+export const uploadDocument = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await api.post(
+            `/rag/documents/upload`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+                timeout: 120000, // 60 seconds timeout
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};

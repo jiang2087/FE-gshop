@@ -68,17 +68,20 @@ const Home = ({cartKey} : {cartKey: string}) => {
     };
   }, []);
   
-  useEffect(() => {
-    const fetchVouchers = async () => {
-      try {
-        const data = await getTop5Vouchers(user?.id);
-        setVouchers(data);
-      } catch (error) {
-        console.error("Error fetching vouchers:", error);
-      }
-    };
-    fetchVouchers();
-  }, []);
+ useEffect(() => {
+  if (!user?.id) return;
+
+  const fetchVouchers = async () => {
+    try {
+      const data = await getTop5Vouchers(user.id);
+      setVouchers(data);
+    } catch (error) {
+      console.error("Error fetching vouchers:", error);
+    }
+  };
+
+  fetchVouchers();
+}, [user?.id]);
 
 
   return (

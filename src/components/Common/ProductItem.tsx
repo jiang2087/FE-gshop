@@ -166,7 +166,7 @@ const ProductItem = ({ item, cartKey }: { item: any, cartKey: string }) => {
           ))}
         </div>
 
-        <p className="text-custom-sm">({item?.reviewCount})</p>
+        <p className="text-custom-sm">({item?.reviewCount || 0})</p>
       </div>
 
       <h3

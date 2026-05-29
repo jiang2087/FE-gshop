@@ -7,6 +7,8 @@ import { useAppSelector } from "@/redux/store";
 import { RootState } from "@/redux/store";
 import { chatWithAI, deleteConversation } from "@/api/aiApi";
 import { getProductById } from "@/api/productApi";
+import ReactMarkdown from "react-markdown"; 
+import remarkGfm from "remark-gfm";
 
 // Compact product card – view only, no cart / wishlist
 const AIProductCard = ({ product }: { product: any }) => {
@@ -231,7 +233,30 @@ const AIChat: React.FC = () => {
                 )}
               </div>
               <div className={`message ${msg.sender}`}>
-                {msg.text}
+                <ReactMarkdown
+  remarkPlugins={[remarkGfm]}
+  components={{
+    table: ({ children }) => (
+      <div className="overflow-x-auto">
+        <table className="table-auto border-collapse border border-gray-300 w-full my-4">
+          {children}
+        </table>
+      </div>
+    ),
+    th: ({ children }) => (
+      <th className="border border-gray-300 px-4 py-2 text-left">
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td className="border border-gray-300 px-4 py-2">
+        {children}
+      </td>
+    ),
+  }}
+>
+  {Array.isArray(msg.text) ? msg.text.join("\n") : msg.text}
+</ReactMarkdown>
                 {msg.sender === "ai" && msg.products && msg.products.length > 0 && (
                   <div className="ai-products-section">
                     <p className="ai-products-title">Sản phẩm gợi ý:</p>

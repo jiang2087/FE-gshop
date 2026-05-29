@@ -321,18 +321,24 @@
 
 .ai-product-card-img-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   width: 60px;
   height: 60px;
   border-radius: 8px;
   overflow: hidden;
   background: #f3f4f6;
+  line-height: 0;
 }
 
 .ai-product-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  vertical-align: top;
 }
 
 .ai-product-card-img-placeholder {

@@ -153,8 +153,8 @@ export function Sidebar() {
                             const href =
                               "url" in item
                                 ? item.url + ""
-                                : "/" +
-                                item.title.toLowerCase().split(" ").join("-");
+                                : "/admin"
+                            // item?.title?.toLowerCase()?.split(" ")?.join("-");
 
                             return (
                               <MenuItem

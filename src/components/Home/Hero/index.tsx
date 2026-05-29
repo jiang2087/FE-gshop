@@ -4,7 +4,6 @@ import HeroFeature from "./HeroFeature";
 import Image from "next/image";
 
 const Hero = ({ products }: { products: any[] }) => {
-  console.log("🚀 ~ Hero ~ products:", products)
   return (
     <section className="overflow-hidden pb-10 lg:pb-12.5 xl:pb-15 pt-57.5 sm:pt-45 lg:pt-30 xl:pt-51.5 bg-[#E5EAF4]">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
@@ -29,7 +28,7 @@ const Hero = ({ products }: { products: any[] }) => {
 
           <div className="xl:max-w-[393px] w-full">
             <div className="flex flex-col sm:flex-row xl:flex-col gap-5 ">
-              {products.slice(0, 2).map((product, index) => (
+              {products.slice(8, 10).map((product, index) => (
                 <div
                   key={index}
                   className="w-full relative rounded-[10px] p-4 sm:p-7.5 bg-white overflow-hidden">

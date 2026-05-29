@@ -18,7 +18,7 @@ const CartSidebarModal = () => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const [discounts, setDiscounts] = useState<any>({});
 
-  useEffect(() => {
+  useEffect(() => {    
     // closing modal while clicking outside
     function handleClickOutside(event: any) {
       if (!event.target.closest(".modal-content")) {

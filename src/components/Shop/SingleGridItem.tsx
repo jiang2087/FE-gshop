@@ -44,14 +44,12 @@ const SingleGridItem = ({ product, cartKey }: { product: any; cartKey: string })
   };
 
   const getProductPrice = () => {
-    if (product?.productVariants?.[0]?.price) return product.productVariants[0].price;
-    if (product?.discountedPrice) return product.discountedPrice;
+    if (product?.productVariants?.[0]?.discountedPrice) return product.productVariants[0].discountedPrice.toFixed(2);
     return "0";
   };
 
   const getProductOriginalPrice = () => {
-    if (product?.productVariants?.[0]?.originalPrice) return product.productVariants[0].originalPrice;
-    if (product?.price) return product.price;
+    if (product?.productVariants?.[0]?.discountType) return product.productVariants[0].originalPrice.toFixed(2);
     return "0";
   };
 

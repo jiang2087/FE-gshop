@@ -4,7 +4,6 @@ import { useDispatch } from "react-redux";
 import Breadcrumb from "../Common/Breadcrumb";
 import Image from "next/image";
 import Newsletter from "../Common/Newsletter";
-import RecentlyViewdItems from "@/components/ShopDetails/RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { getProductById } from "@/api/productApi";
 import { Heart, ThumbsUp } from "lucide-react";
@@ -15,6 +14,7 @@ import { toast } from "react-hot-toast";
 import { useSearchParams } from "next/navigation";
 import { addToCartThunk } from "@/redux/slices/cart-slice";
 import { addItemToWishlist } from "@/redux/slices/wishlist-slice";
+import RecentlyViewedItems from "../ShopDetails/RecentlyViewd";
 
 
 const DetailItems = {
@@ -22,6 +22,23 @@ const DetailItems = {
     { key: "storage", label: "Storage" },
     { key: "ram", label: "RAM" },
     { key: "cpu", label: "CPU" },
+  ],
+    mobile: [
+    { key: "battery", label: "Battery" },
+    { key: "camera", label: "Camera" },
+    { key: "screenSize", label: "Screen Size" },
+  ],
+
+  television: [
+    { key: "screenSize", label: "Screen Size" },
+    { key: "resolution", label: "Resolution" },
+    { key: "refreshRate", label: "Refresh Rate" },
+  ],
+
+  watches: [
+    { key: "batteryLife", label: "Battery Life" },
+    { key: "gps", label: "GPS" },
+    { key: "material", label: "Material" },
   ],
 };
 
@@ -41,7 +58,7 @@ const AdditionalInfo = {
     { key: "model", label: "Model" },
     { key: "brand", label: "Brand" },
     { key: "productType", label: "Product Type" },
-    { key: "ScreenSize", label: "Screen Size (inch)" },
+    { key: "screenSize", label: "Screen Size (inch)" },
     { key: "resolution", label: "Resolution" },
     { key: "camera", label: "Camera" },
     { key: "battery", label: "Battery" },
@@ -90,7 +107,7 @@ const formatValue = (item, value) => {
     case "batteryLife":
       return `${value} hours`;
     case "gps":
-      return value ? "Yes" : "No";
+       return value === true || value === 1 || value === "1" ? "Yes" : "No";
     default:
       return value;
   }
@@ -578,7 +595,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
 
                   <div className="flex items-center gap-3.5 mb-6">
                     <span className="font-bold text-2xl sm:text-3xl text-dark">
-                      Price: ${hasDiscount ? discountedPrice : price}
+                      Price: ${(hasDiscount ? discountedPrice : price).toFixed(2)}
                     </span>
                     {hasDiscount && (
                       <span className="line-through text-red-light text-lg sm:text-xl">
@@ -679,7 +696,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                             </h4>
                           </div>
                           <div className="text-dark">
-                            {product1?.productAttributes?.[item.key]}
+                            {formatValue(item, product1?.productAttributes?.[item.key])}
                           </div>
                         </div>
                       ))}
@@ -859,7 +876,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
                     >
                       <div className="max-w-[450px] min-w-[140px] w-full">
                         <p className="text-sm sm:text-base text-dark">
-                          {item.label}
+                          {(item.label)}
                         </p>
                       </div>
                       <div className="w-full">
@@ -1081,7 +1098,7 @@ const ProductDetail = ({ cartKey }: { cartKey: string | undefined }) => {
             </div>
           </section>
 
-          <RecentlyViewdItems />
+          <RecentlyViewedItems cartKey={cartKey} productId={product1?.id} />
 
           <Newsletter />
         </>
